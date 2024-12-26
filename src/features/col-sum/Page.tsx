@@ -9,7 +9,7 @@ type Equation = {
 };
 
 let $equation = createStore<Equation | null>(null);
-let $answer = createStore<number | null>(null);
+let $answer = createStore<string | null>(null);
 
 let answerChanged = createEvent<string | number | null>();
 let numClicked = createEvent<number>();
@@ -20,7 +20,7 @@ let submitted = createEvent();
 let newClicked = createEvent();
 
 let submitFx = createEffect(
-  (data: { eq: Equation | null; answer: number | null }) => {
+  (data: { eq: Equation | null; answer: string | null }) => {
     let { eq, answer } = data;
 
     if (!eq) {
@@ -29,9 +29,13 @@ let submitFx = createEffect(
     if (answer === null) {
       return { status: "error", message: "Введите ответ" } as const;
     }
+    let answerNum = +answer;
+    if (Number.isNaN(answerNum)) {
+      return { status: "error", message: "Введите число" } as const;
+    }
 
-    if (eq.a + eq.b === answer) {
-      return { status: "ok" } as const;
+    if (eq.a + eq.b === answerNum) {
+      return { status: "ok", message: "Ура! Это правильный ответ!" } as const;
     }
 
     return { status: "error", message: "Неправильный ответ" } as const;
@@ -45,7 +49,7 @@ $answer
     if (typeof answer === "string") {
       let num = parseInt(answer);
       if (Number.isNaN(num)) {
-        return num;
+        return String(num);
       }
       return null;
     }
@@ -53,15 +57,16 @@ $answer
     return cur;
   })
   .on(numClicked, (cur, n) => {
-    if (cur === null) return n;
-    if (cur > 1000) return 9999;
+    if (cur === null) return String(n);
+    if (cur.length >= 3) return "999";
 
-    return cur * 10 + n;
+    return n + cur;
   })
   .on(backClicked, (cur) => {
     if (cur === null) return null;
+    if (cur.length === 1) return null;
 
-    return Math.floor(cur / 10);
+    return cur.slice(1);
   })
   .on(newClicked, () => null)
   .on(submitFx.doneData, (_, res) => {
@@ -79,11 +84,7 @@ $equation
   });
 
 submitFx.doneData.watch((res) => {
-  if (res.status === "ok") {
-    alert("Correct!");
-  } else {
-    alert(res.message);
-  }
+  alert(res.message);
 });
 
 sample({
@@ -115,7 +116,17 @@ export function ColSum() {
         <p>no equation</p>
       )}
       <hr />
-      <div className={css.answer}>{answer ?? <Nbsp />}</div>
+      <div className={css.answer}>
+        <span
+          style={{
+            display: answer === "999" ? "none" : "",
+          }}
+          className={css.cursorAnimation}
+        >
+          _
+        </span>
+        {answer}
+      </div>
       <div className={css.numpad}>
         <NumpadNum val="1" onClick={() => numClicked(1)} />
         <NumpadNum val="2" onClick={() => numClicked(2)} />
@@ -170,12 +181,25 @@ export function ColSum() {
   );
 }
 
+function randomIntInRange(from: number, to: number) {
+  return from + Math.floor(Math.random() * (to - from));
+}
+
 function newEq(): Equation {
-  return {
-    type: "add",
-    a: 100 + Math.floor(Math.random() * 100),
-    b: Math.floor(Math.random() * 150),
-  };
+  let a = [
+    //
+    randomIntInRange(1, 3),
+    randomIntInRange(0, 9),
+    randomIntInRange(6, 9),
+  ].join("");
+
+  let b = [
+    //
+    randomIntInRange(1, 9),
+    randomIntInRange(0, 6),
+  ].join("");
+
+  return { type: "add", a: +a, b: +b };
 }
 
 function NumpadNum(props: { val: string; onClick: () => void }) {

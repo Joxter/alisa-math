@@ -28,6 +28,25 @@
   font-size: 46px;
 }
 
+.cursorAnimation {
+  animation: cursor 1.5s infinite;
+}
+
+@keyframes cursor {
+  0% {
+    opacity: 1;
+  }
+  49% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .input {
   display: grid;
   gap: 12px;
