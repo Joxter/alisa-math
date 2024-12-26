@@ -1,0 +1,53 @@
+.root {
+  max-width: 600px;
+  padding: 12px;
+  margin: 0 auto;
+  height: 100%;
+  position: relative;
+}
+
+.equation {
+  position: relative;
+  display: grid;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #1468c5;
+  max-width: 300px;
+  margin: 0 auto;
+
+  gap: 18px;
+  font-size: 46px;
+}
+
+.input {
+  display: grid;
+  gap: 12px;
+  max-width: 300px;
+  margin: 0 auto;
+
+  input {
+    font-size: 46px;
+    text-align: right;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  button {
+    font-size: 46px;
+    padding: 12px;
+    background-color: pink;
+    border: 2px solid deeppink;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+}
+
+.plus {
+  color: #1468c5;
+  position: absolute;
+  right: -12px;
+  top: 30px
+}
