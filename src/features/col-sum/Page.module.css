@@ -14,7 +14,16 @@
   color: #1468c5;
   max-width: 300px;
   margin: 0 auto;
+  gap: 18px;
+  font-size: 46px;
+}
 
+.answer {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: #1468c5;
+  max-width: 300px;
+  margin: 0 auto 12px;
   gap: 18px;
   font-size: 46px;
 }
@@ -31,23 +40,38 @@
     width: 100%;
     font-family: inherit;
   }
-
-  button {
-    font-size: 46px;
-    padding: 12px;
-    background-color: pink;
-    border: 2px solid deeppink;
-    border-radius: 8px;
-    color: #ffffff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
 }
 
 .plus {
   color: #1468c5;
   position: absolute;
   right: -12px;
-  top: 30px
+  top: 30px;
+}
+
+.numpad {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.footer {
+  display: grid;
+  gap: 12px;
+  max-width: 300px;
+  margin: 18px auto;
+}
+
+.niceButton {
+  font-size: 46px;
+  padding: 12px;
+  background-color: pink;
+  border: 2px solid deeppink;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }

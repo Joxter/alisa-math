@@ -9,39 +9,62 @@ type Equation = {
 };
 
 let $equation = createStore<Equation | null>(null);
-let $answer = createStore<string>("");
+let $answer = createStore<number | null>(123);
 
-let answerChanged = createEvent<string>();
+let answerChanged = createEvent<string | number | null>();
+let numClicked = createEvent<number>();
+let backClicked = createEvent();
+
 let setEquation = createEvent<Equation>();
 let submitted = createEvent();
 let newClicked = createEvent();
 
-let submitFx = createEffect((data: { eq: Equation | null; answer: string }) => {
-  // console.log("submit", data);
+let submitFx = createEffect(
+  (data: { eq: Equation | null; answer: number | null }) => {
+    let { eq, answer } = data;
 
-  let { eq, answer } = data;
+    if (!eq) {
+      return { status: "error", message: "no equation" } as const;
+    }
+    if (answer === null) {
+      return { status: "error", message: "no answer" } as const;
+    }
 
-  if (!eq) {
-    return { status: "error", message: "no equation" } as const;
-  }
+    if (eq.a + eq.b === answer) {
+      return { status: "ok" } as const;
+    }
 
-  let answerNum = +answer.trim();
-
-  if (eq.a + eq.b === answerNum) {
-    return { status: "ok" } as const;
-  }
-
-  return { status: "error", message: "Wrong answer :(" } as const;
-});
+    return { status: "error", message: "Wrong answer :(" } as const;
+  },
+);
 
 $answer
-  .on(answerChanged, (_, answer) => {
-    console.log("----", answer);
-    return answer;
+  .on(answerChanged, (cur, answer) => {
+    if (answer === null) return null;
+
+    if (typeof answer === "string") {
+      let num = parseInt(answer);
+      if (Number.isNaN(num)) {
+        return num;
+      }
+      return null;
+    }
+
+    return cur;
+  })
+  .on(numClicked, (cur, n) => {
+    if (cur === null) {
+      return n;
+    }
+    return cur * 10 + n;
+  })
+  .on(backClicked, (cur) => {
+    if (cur === null) return null;
+
+    return Math.floor(cur / 10);
   })
   .on(submitFx.doneData, (_, res) => {
-    // console.log("submitFx.doneData");
-    return res.status === "ok" ? "" : _;
+    return res.status === "ok" ? null : _;
   });
 
 $equation
@@ -90,6 +113,27 @@ export function ColSum() {
         <p>no equation</p>
       )}
       <hr />
+      <div className={css.answer}>{answer ?? <Nbsp />}</div>
+      <div className={css.numpad}>
+        <NumpadNum val="1" onClick={() => numClicked(1)} />
+        <NumpadNum val="2" onClick={() => numClicked(2)} />
+        <NumpadNum val="3" onClick={() => numClicked(3)} />
+        <NumpadNum val="4" onClick={() => numClicked(4)} />
+        <NumpadNum val="5" onClick={() => numClicked(5)} />
+        <NumpadNum val="6" onClick={() => numClicked(6)} />
+        <NumpadNum val="7" onClick={() => numClicked(7)} />
+        <NumpadNum val="8" onClick={() => numClicked(8)} />
+        <NumpadNum val="9" onClick={() => numClicked(9)} />
+        <NumpadNum
+          val="❤️"
+          onClick={() => {
+            alert("Я тебя люблю!");
+          }}
+        />
+        <NumpadNum val="0" onClick={() => numClicked(0)} />
+        <NumpadNum val="<" onClick={() => backClicked()} />
+      </div>
+      {/*
       <div className={css.input}>
         <input
           value={answer}
@@ -106,8 +150,17 @@ export function ColSum() {
             answerChanged("");
           }}
         />
-        <button type="submit">Ok</button>
-        <button type="button" onClick={newClicked}>
+      </div>
+      */}
+      <div className={css.footer}>
+        <button type="submit" className={css.niceButton}>
+          Ok
+        </button>
+        <button
+          type="button"
+          onClick={() => newClicked()}
+          className={css.niceButton}
+        >
           New
         </button>
       </div>
@@ -121,4 +174,16 @@ function newEq(): Equation {
     a: 100 + Math.floor(Math.random() * 100),
     b: Math.floor(Math.random() * 150),
   };
+}
+
+function NumpadNum(props: { val: string; onClick: () => void }) {
+  return (
+    <button className={css.niceButton} type="button" onClick={props.onClick}>
+      {props.val}
+    </button>
+  );
+}
+
+function Nbsp() {
+  return <span>&nbsp;</span>;
 }
