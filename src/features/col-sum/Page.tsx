@@ -24,17 +24,17 @@ let submitFx = createEffect(
     let { eq, answer } = data;
 
     if (!eq) {
-      return { status: "error", message: "no equation" } as const;
+      return { status: "error", message: "Не найден пример" } as const;
     }
     if (answer === null) {
-      return { status: "error", message: "no answer" } as const;
+      return { status: "error", message: "Введите ответ" } as const;
     }
 
     if (eq.a + eq.b === answer) {
       return { status: "ok" } as const;
     }
 
-    return { status: "error", message: "Wrong answer :(" } as const;
+    return { status: "error", message: "Неправильный ответ" } as const;
   },
 );
 
@@ -63,12 +63,14 @@ $answer
 
     return Math.floor(cur / 10);
   })
+  .on(newClicked, () => null)
   .on(submitFx.doneData, (_, res) => {
     return res.status === "ok" ? null : _;
   });
 
 $equation
   .on(setEquation, (_, equation) => equation)
+  .on(newClicked, () => newEq())
   .on(submitFx.doneData, (_, res) => {
     if (res.status === "ok") {
       return newEq();
@@ -154,14 +156,14 @@ export function ColSum() {
       */}
       <div className={css.footer}>
         <button type="submit" className={css.niceButton}>
-          Ok
+          Принять
         </button>
         <button
           type="button"
           onClick={() => newClicked()}
-          className={css.niceButton}
+          className={css.niceButtonLight}
         >
-          New
+          Новый пример
         </button>
       </div>
     </form>

@@ -65,13 +65,20 @@
 }
 
 .niceButton {
-  font-size: 46px;
+  font-size: 32px;
   padding: 12px;
   background-color: pink;
   border: 2px solid deeppink;
   border-radius: 8px;
   color: #ffffff;
-  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+}
+
+.niceButtonLight {
+  font-size: 18px;
+  padding: 12px;
+  border: none;
+  color: deeppink;
+  background: transparent;
+  cursor: pointer;
 }
