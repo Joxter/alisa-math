@@ -9,7 +9,7 @@ type Equation = {
 };
 
 let $equation = createStore<Equation | null>(null);
-let $answer = createStore<number | null>(123);
+let $answer = createStore<number | null>(null);
 
 let answerChanged = createEvent<string | number | null>();
 let numClicked = createEvent<number>();
@@ -53,9 +53,9 @@ $answer
     return cur;
   })
   .on(numClicked, (cur, n) => {
-    if (cur === null) {
-      return n;
-    }
+    if (cur === null) return n;
+    if (cur > 1000) return 9999;
+
     return cur * 10 + n;
   })
   .on(backClicked, (cur) => {
