@@ -15,12 +15,14 @@ type Answer = [AnswerDigit | null, AnswerDigit | null, AnswerDigit | null];
 
 let $equation = createStore<Equation | null>(null);
 let $answer = createStore<Answer>([null, null, null]);
+let $caret = createStore(2);
 
-let numClicked = createEvent<[number, 0 | 1 | 2]>();
+let numClicked = createEvent<number>();
 
 let setEquation = createEvent<Equation>();
 let submitted = createEvent();
 let newClicked = createEvent();
+let caretClick = createEvent<number>();
 
 let submitFx = createEffect((data: { eq: Equation | null; answer: Answer }) => {
   let { eq, answer } = data;
@@ -52,11 +54,11 @@ let submitFx = createEffect((data: { eq: Equation | null; answer: Answer }) => {
 });
 
 $answer
-  .on(numClicked, (cur, [n, i]) => {
-    let newAns = [...cur] as Answer;
-    newAns[i] = newAns[i]?.n === n ? null : { n, status: null };
-    return newAns;
-  })
+  // .on(numClicked, (cur, [n, i]) => {
+  //   let newAns = [...cur] as Answer;
+  //   newAns[i] = newAns[i]?.n === n ? null : { n, status: null };
+  //   return newAns;
+  // })
   .on(newClicked, () => [null, null, null])
   .on(submitFx.doneData, (current, res) => {
     if (res.status === "error" && res.ansStatus) {
@@ -101,10 +103,57 @@ sample({
   target: submitFx,
 });
 
+let moveCaretFx = createEffect(
+  (props: { answer: Answer | null; cur: number }): Promise<number> => {
+    return new Promise((resolve) => {
+      console.log(props);
+
+      if (!props.answer) return resolve(props.cur);
+      let { answer, cur } = props;
+
+      if (answer[cur + 1] === null) {
+        setTimeout(() => resolve((cur + 1) % 3), 4);
+      } else if (answer[cur - 1] === null) {
+        setTimeout(() => resolve(cur - 1), 4);
+      }
+    });
+  },
+);
+
+$caret
+  .on(moveCaretFx.doneData, (_, next) => {
+    console.log({ next });
+    return next;
+    // return (3 + cur - 1) % 3;
+  })
+  .on(caretClick, (_, c) => c);
+
+sample({
+  source: [$answer, $caret] as const,
+  clock: numClicked,
+  fn: ([cur, caret], n) => {
+    let newAns = [...cur] as Answer;
+    newAns[caret] = newAns[caret]?.n === n ? null : { n, status: null };
+    return newAns;
+  },
+  target: $answer,
+});
+
+sample({
+  source: { cur: $caret, answer: $answer },
+  clock: numClicked,
+  target: moveCaretFx,
+});
+
 setEquation(newEq());
 
 export function ColSum() {
-  let [equation, answer, modal] = useUnit([$equation, $answer, $modal]);
+  let [equation, answer, modal, caret] = useUnit([
+    $equation,
+    $answer,
+    $modal,
+    $caret,
+  ]);
 
   return (
     <form
@@ -133,43 +182,63 @@ export function ColSum() {
         <p>no equation</p>
       )}
       <hr />
-      <div className={css.answer}>
-        {answer.map((d) => {
-          let color = "";
+      <div className={css.answerCont}>
+        <button
+          onClick={() => {
+            alert(Math.random() > 0.5 ? "Я тебя люблю" : "I love you");
+          }}
+          className={css.niceButton}
+        >
+          ❤️
+        </button>
+        <div className={css.answer}>
+          {answer.map((d, i) => {
+            let color = "";
 
-          if (d && d.status !== null) {
-            color = d.status === "ok" ? "" : "red";
-          }
-          return <span style={{ color }}>{d?.n ?? "_"}</span>;
-        })}
+            if (d && d.status !== null) {
+              color = d.status === "ok" ? "" : "red";
+            }
+            return (
+              <span
+                className={css.ansNum}
+                onClick={() => {
+                  console.log("!!!!", i);
+                  caretClick(i);
+                }}
+                style={{
+                  color,
+                  gridColumn: `${i + 1} / ${i + 2}`,
+                  gridRow: `1 / 2`,
+                }}
+              >
+                {d?.n ?? "_"}
+              </span>
+            );
+          })}
+          <span
+            className={css.caret}
+            style={{
+              transform: `translateX(${caret * 30 + (caret - 1) * 2}px)`,
+              gridColumn: `1 / 2`,
+            }}
+          ></span>
+        </div>
       </div>
       <div className={css.numpad}>
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => {
-          return (
-            <React.Fragment key={i}>
-              <NumpadNum
-                val={n}
-                current={answer[0]}
-                onClick={() => numClicked([n, 0])}
-              />
-              <NumpadNum
-                val={n}
-                current={answer[1]}
-                onClick={() => numClicked([n, 1])}
-              />
-              <NumpadNum
-                val={n}
-                current={answer[2]}
-                onClick={() => numClicked([n, 2])}
-              />
-            </React.Fragment>
-          );
-        })}
+        <NumpadNum val={1} onClick={() => numClicked(1)} />
+        <NumpadNum val={2} onClick={() => numClicked(2)} />
+        <NumpadNum val={3} onClick={() => numClicked(3)} />
+        <NumpadNum val={4} onClick={() => numClicked(4)} />
+        <NumpadNum val={5} onClick={() => numClicked(5)} />
+        <NumpadNum val={6} onClick={() => numClicked(6)} />
+        <NumpadNum val={7} onClick={() => numClicked(7)} />
+        <NumpadNum val={8} onClick={() => numClicked(8)} />
+        <NumpadNum val={9} onClick={() => numClicked(9)} />
+        <NumpadNum val={"X"} onClick={() => numClicked(0)} />
+        <NumpadNum val={0} onClick={() => numClicked(0)} />
+        <NumpadNum val={"="} onClick={() => submitted()} />
       </div>
       <div className={css.footer}>
-        <button type="submit" className={css.niceButton}>
-          Принять
-        </button>
         <button
           type="button"
           onClick={() => newClicked()}
@@ -203,21 +272,9 @@ export function newEq(): Equation {
   return { type: "add", a: +a, b: +b };
 }
 
-function NumpadNum(props: {
-  val: number;
-  current: AnswerDigit | null;
-  onClick: () => void;
-}) {
+function NumpadNum(props: { val: number | string; onClick: () => void }) {
   return (
-    <button
-      className={cn(
-        //
-        css.niceButton,
-        props.current?.n === props.val && css.niceButtonCurrent,
-      )}
-      type="button"
-      onClick={props.onClick}
-    >
+    <button className={css.niceButton} type="button" onClick={props.onClick}>
       {props.val}
     </button>
   );
