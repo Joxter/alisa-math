@@ -24,56 +24,18 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
   color: #1468c5;
-  /*color: #e2f373;*/
   font-variant-numeric: tabular-nums;
   max-width: 100px;
-  /*letter-spacing: 8px;*/
   margin: 0 auto 12px;
   font-weight: bold;
-  /*gap: 18px;*/
   font-size: 46px;
-
   width: 100%;
-
   display: flex;
   gap: 2px;
 
   span {
     display: inline-block;
     width: 30px;
-  }
-}
-
-.cursorAnimation {
-  animation: cursor 1.5s infinite;
-}
-
-@keyframes cursor {
-  0% {
-    opacity: 1;
-  }
-  49% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.input {
-  display: grid;
-  gap: 12px;
-  max-width: 300px;
-  margin: 0 auto;
-
-  input {
-    font-size: 46px;
-    text-align: right;
-    width: 100%;
-    font-family: inherit;
   }
 }
 
@@ -112,7 +74,8 @@
 
 .niceButton {
   font-size: 28px;
-  padding: 4px;
+  padding-bottom: 0px;
+  padding-top: 4px;
   background-color: #ffdbe1;
   border: 4px solid #ffdbe1;
   border-radius: 8px;
@@ -121,9 +84,7 @@
 }
 
 .niceButtonCurrent {
-  /*background-color: pink;*/
   border: 4px solid #4d97ec;
-  /*color: #ffffff;*/
 }
 
 .niceButtonLight {
@@ -132,5 +93,40 @@
   border: none;
   color: deeppink;
   background: transparent;
+  cursor: pointer;
+}
+
+.modalOverlay {
+  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  display: grid;
+  gap: 12px;
+  font-size: 24px;
+  letter-spacing: 3px;
+  max-width: 270px;
+}
+
+.modalButton {
+  font-size: 16px;
+  padding: 10px 20px;
+  background-color: #4d97ec;
+  border: none;
+  border-radius: 4px;
+  color: white;
   cursor: pointer;
 }
