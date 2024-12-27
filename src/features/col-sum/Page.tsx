@@ -2,7 +2,6 @@ import { createEffect, createEvent, createStore, sample } from "effector";
 import { useUnit } from "effector-react";
 import css from "./Page.module.css";
 import React from "react";
-import { cn } from "../../utils.ts";
 
 type Equation = {
   type: "add";
@@ -16,6 +15,7 @@ type Answer = [AnswerDigit | null, AnswerDigit | null, AnswerDigit | null];
 let $equation = createStore<Equation | null>(null);
 let $answer = createStore<Answer>([null, null, null]);
 let $caret = createStore(2);
+let $initCaret = createStore(2);
 
 let numClicked = createEvent<number>();
 
@@ -106,8 +106,6 @@ sample({
 let moveCaretFx = createEffect(
   (props: { answer: Answer | null; cur: number }): Promise<number> => {
     return new Promise((resolve) => {
-      console.log(props);
-
       if (!props.answer) return resolve(props.cur);
       let { answer, cur } = props;
 
@@ -120,12 +118,27 @@ let moveCaretFx = createEffect(
   },
 );
 
+sample({
+  source: [$initCaret, $answer] as const,
+  clock: caretClick,
+  fn: ([initCaret, ans], click) => {
+    if (ans.every((it) => it === null)) {
+      return click;
+    }
+
+    return initCaret;
+  },
+
+  target: $initCaret,
+});
+
+sample({ source: $initCaret, clock: newClicked, target: $caret });
+
+$initCaret.watch(console.log);
+
 $caret
-  .on(moveCaretFx.doneData, (_, next) => {
-    console.log({ next });
-    return next;
-    // return (3 + cur - 1) % 3;
-  })
+  //
+  .on(moveCaretFx.doneData, (_, next) => next)
   .on(caretClick, (_, c) => c);
 
 sample({
@@ -202,7 +215,6 @@ export function ColSum() {
               <span
                 className={css.ansNum}
                 onClick={() => {
-                  console.log("!!!!", i);
                   caretClick(i);
                 }}
                 style={{
