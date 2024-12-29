@@ -17,7 +17,7 @@ let $answer = createStore<Answer>([null, null, null]);
 let $caret = createStore(2);
 let $initCaret = createStore(2);
 
-let numClicked = createEvent<number>();
+let numClicked = createEvent<number | null>();
 
 let setEquation = createEvent<Equation>();
 let submitted = createEvent();
@@ -104,9 +104,15 @@ sample({
 });
 
 let moveCaretFx = createEffect(
-  (props: { answer: Answer | null; cur: number }): Promise<number> => {
+  (props: {
+    answer: Answer | null;
+    cur: number;
+    num: number | null;
+  }): Promise<number> => {
     return new Promise((resolve) => {
       if (!props.answer) return resolve(props.cur);
+      if (props.num === null) return resolve(props.cur);
+
       let { answer, cur } = props;
 
       if (answer[cur + 1] === null) {
@@ -134,8 +140,6 @@ sample({
 
 sample({ source: $initCaret, clock: newClicked, target: $caret });
 
-$initCaret.watch(console.log);
-
 $caret
   //
   .on(moveCaretFx.doneData, (_, next) => next)
@@ -146,7 +150,8 @@ sample({
   clock: numClicked,
   fn: ([cur, caret], n) => {
     let newAns = [...cur] as Answer;
-    newAns[caret] = newAns[caret]?.n === n ? null : { n, status: null };
+    newAns[caret] =
+      n === null || newAns[caret]?.n === n ? null : { n, status: null };
     return newAns;
   },
   target: $answer,
@@ -155,6 +160,7 @@ sample({
 sample({
   source: { cur: $caret, answer: $answer },
   clock: numClicked,
+  fn: (d, num) => ({ ...d, num }),
   target: moveCaretFx,
 });
 
@@ -246,7 +252,7 @@ export function ColSum() {
         <NumpadNum val={7} onClick={() => numClicked(7)} />
         <NumpadNum val={8} onClick={() => numClicked(8)} />
         <NumpadNum val={9} onClick={() => numClicked(9)} />
-        <NumpadNum val={"X"} onClick={() => numClicked(0)} />
+        <NumpadNum val={"X"} onClick={() => numClicked(null)} />
         <NumpadNum val={0} onClick={() => numClicked(0)} />
         <NumpadNum val={"="} onClick={() => submitted()} />
       </div>
