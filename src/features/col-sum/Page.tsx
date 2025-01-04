@@ -267,7 +267,9 @@ export function ColSum() {
           Новый пример
         </button>
       </div>
-      <Link href={prefix + "/one"}>to one</Link>
+      <Link href={prefix + "/one"} style={{ opacity: "0.1" }}>
+        to one
+      </Link>
     </form>
   );
 }

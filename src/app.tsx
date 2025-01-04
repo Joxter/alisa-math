@@ -24,8 +24,12 @@ export function One() {
   return (
     <Layout>
       <p>ONE</p>
-      <Link href={prefix + "/one"}>to one</Link>
-      <Link href={prefix + "/two"}>to two</Link>
+      <p>
+        <Link href={prefix + "/one"}>to one</Link>
+      </p>
+      <p>
+        <Link href={prefix + "/two"}>to two</Link>
+      </p>
     </Layout>
   );
 }
@@ -34,8 +38,12 @@ export function Two() {
   return (
     <Layout>
       <p>TWO</p>
-      <Link href={prefix + "/one"}>to one</Link>
-      <Link href={prefix + "/two"}>to two</Link>
+      <p>
+        <Link href={prefix + "/one"}>to one</Link>
+      </p>
+      <p>
+        <Link href={prefix + "/two"}>to two</Link>
+      </p>
     </Layout>
   );
 }
