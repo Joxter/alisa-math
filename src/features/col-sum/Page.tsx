@@ -265,6 +265,7 @@ export function ColSum() {
           Новый пример
         </button>
       </div>
+      <p style={{ color: "transparent" }}>111</p>
     </form>
   );
 }
