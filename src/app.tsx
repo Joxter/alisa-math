@@ -6,7 +6,7 @@ import { Layout } from "./pages/Layout.tsx";
 
 let prefix =
   location.origin === "https://joxter.github.io"
-    ? "/alisa-math/gh-pages/"
+    ? "/alisa-math/"
     : "/";
 
 function App() {
