@@ -2,6 +2,8 @@ import { createEffect, createEvent, createStore, sample } from "effector";
 import { useUnit } from "effector-react";
 import css from "./Page.module.css";
 import React from "react";
+import { Link } from "wouter";
+import { prefix } from "../../config.ts";
 
 type Equation = {
   type: "add";
@@ -265,7 +267,7 @@ export function ColSum() {
           Новый пример
         </button>
       </div>
-      <p style={{ color: "transparent" }}>111</p>
+      <Link href={prefix + "/one"}>to one</Link>
     </form>
   );
 }

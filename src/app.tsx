@@ -3,14 +3,9 @@ import { Link, Route, Router, Switch } from "wouter";
 import { NotFound } from "./pages/NotFound.tsx";
 import { HomePage } from "./pages/HomePage.tsx";
 import { Layout } from "./pages/Layout.tsx";
-
-let prefix =
-  location.origin === "https://joxter.github.io"
-    ? "/alisa-math/?"
-    : "/";
+import { prefix } from "./config.ts";
 
 function App() {
-  // basename
   return (
     <Switch>
       <Route path={prefix + ""} component={HomePage} />
