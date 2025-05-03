@@ -2,6 +2,47 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 // import calcData from "./calculationPS_small.json";
 import calcData from "./calculationPS_small (2).json";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  type ChartOptions,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+
+export const options: ChartOptions = {
+  responsive: true,
+  animation: false,
+  aspectRatio: 3,
+  // animation: false,
+  scales: {
+    // x: { type: "timeseries" },
+  },
+  interaction: { intersect: false },
+  // "samples-filler-analyser": {
+  //   target: "chart-analyser",
+  // },
+  plugins: {
+    legend: { position: "top" as const },
+    filler: { propagate: false },
+    title: { display: true, text: "Chart.js Line Chart" },
+  },
+};
 
 const bad = [
   "date",
@@ -30,6 +71,7 @@ const lastKeys = [
   "consumption_from_grid_before_battery [kWh]",
   "battery_usage [kW]",
   "generator_capacity [kWh]",
+  "power_from_grid_after_battery [kW]",
   "power_from_grid_after_generator [kW]",
 ];
 
@@ -55,17 +97,18 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 */
 
 export function HomePage() {
-  /*const lastKeys = [
-  "consumption_from_grid_before_battery [kWh]",
-  "battery_usage [kW]",
-  "generator_capacity [kWh]",
-  "power_from_grid_after_generator [kW]",
-];
-*/
-
   const [highlightDate, setHighlightDate] = useState(null);
 
-  // const highlightDate = "2024-05-06";
+  function dayOf(date?: any) {
+    return date && date.date.toISOString().split("T")[0];
+  }
+
+  const dayDate = highlightDate
+    ? extractDayData(calcData, highlightDate.date)
+    : null;
+
+  const threshold = 155;
+  // const threshold = 891;
 
   return (
     <div style={{ display: "grid", gap: "12px", padding: "50px" }}>
@@ -75,15 +118,17 @@ export function HomePage() {
         values={calcData["consumption_from_grid_before_battery [kWh]"].map(
           (it) => Math.abs(it) / 24,
         )}
-        threshold={155}
-        highlightDate={highlightDate}
+        threshold={threshold}
+        highlightDate={dayOf(highlightDate)}
+        onSelect={setHighlightDate}
       />
       <CalendarHeatmap
         name={"battery_usage [kW]"}
         data={calcData["date"]}
         values={calcData["battery_usage [kW]"].map((it) => Math.abs(it) / 4)}
         threshold={null}
-        highlightDate={highlightDate}
+        highlightDate={dayOf(highlightDate)}
+        onSelect={setHighlightDate}
       />
       <CalendarHeatmap
         name={"generator_capacity [kWh]"}
@@ -92,7 +137,8 @@ export function HomePage() {
           (it) => Math.abs(it) / 24,
         )}
         threshold={null}
-        highlightDate={highlightDate}
+        highlightDate={dayOf(highlightDate)}
+        onSelect={setHighlightDate}
       />
       <CalendarHeatmap
         name={"power_from_grid_after_generator [kW]"}
@@ -100,22 +146,32 @@ export function HomePage() {
         values={calcData["power_from_grid_after_generator [kW]"].map(
           (it) => it / (4 * 24),
         )}
-        threshold={155}
-        highlightDate={highlightDate}
+        threshold={threshold}
+        highlightDate={dayOf(highlightDate)}
+        onSelect={setHighlightDate}
       />
 
-      {/*
-      {keys.map((key) => {
-        return (
-          <CalendarHeatmap
-            key={key}
-            name={key}
-            data={calcData["date"]}
-            values={calcData[key]}
-          />
-        );
-      })}
-      */}
+      {dayDate && (
+        <Line
+          options={options}
+          data={{
+            labels: dayDate.date.map((it) => {
+              // return new Date(it).toISOString().replaceAll('')
+              return new Date(it).toISOString().slice(11, 16);
+            }),
+            datasets: lastKeys.map((key, i) => {
+              let item = {
+                label: key,
+                data: dayDate[key],
+                borderColor: colors[i],
+                // hidden: true,
+              };
+              console.log(item);
+              return item;
+            }),
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -133,11 +189,10 @@ const CalendarHeatmap = ({
   name: string;
   threshold?: number | null;
   highlightDate?: string | null;
-  onSelect?: (day: string) => void;
+  onSelect?: (day: any) => void;
 }) => {
   const svgRef = useRef(null);
   const [minMax, setMinMax] = useState([0, 0, 0]);
-  const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
     // Clear any existing chart
@@ -287,10 +342,10 @@ const CalendarHeatmap = ({
       .attr("stroke-width", (d) =>
         d.exceedsThreshold || d.isHighlighted ? 2 : 0,
       )
-      .attr("class", "day-cell")
+      // .attr("class", "day-cell")
       .on("click", (event, d) => {
-        console.log(event, d);
-        setSelectedDay(d);
+        // console.log(event, d);
+        // setSelectedDay(d);
         onSelect(d);
       })
       .append("title")
@@ -301,7 +356,7 @@ ${d.exceedsThreshold ? `⚠️ Exceeds threshold (${threshold})` : ""}
 ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       );
 
-    // Add a highlight effect for the selected day if there is any
+    // Add a highlight effect for the highlighted day if there is any
     if (highlightDate) {
       const highlightedData = processedData.find((d) => d.isHighlighted);
 
@@ -328,122 +383,149 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
           .attr("rx", 2)
           .attr("ry", 2);
       }
-
-      // Add month outlines and labels
-      const months = year
-        .append("g")
-        .selectAll("g")
-        .data(
-          d3.timeMonths(
-            new Date(new Date(data[0]).getFullYear(), 0, 1),
-            new Date(new Date(data[0]).getFullYear() + 1, 0, 1),
-          ),
-        )
-        .join("g");
-
-      months
-        .filter((d, i) => i)
-        .append("path")
-        .attr("fill", "none")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3)
-        .attr("d", pathMonth);
-
-      months
-        .append("text")
-        .attr(
-          "x",
-          (d) =>
-            timeWeek.count(d3.timeYear(d), timeWeek.ceil(d)) * cellSize + 42,
-        )
-        .attr("y", -5)
-        .text(formatMonth);
-
-      // Add legend
-      const legendWidth = 200;
-      const legendHeight = 20;
-      const legendX = width - legendWidth - 10;
-      const legendY = height - 30;
-
-      const legendScale = d3
-        .scaleLinear()
-        .domain([min, max])
-        .range([0, legendWidth]);
-
-      const legendAxis = d3
-        .axisBottom(legendScale)
-        .tickSize(6)
-        .ticks(5)
-        .tickFormat(d3.format(".2f"));
-
-      const legend = svg
-        .append("g")
-        .attr("transform", `translate(${legendX}, ${legendY})`);
-
-      const defs = svg.append("defs");
-
-      const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`; // Generate unique ID
-
-      const gradient = defs
-        .append("linearGradient")
-        .attr("id", gradientId)
-        .attr("x1", "0%")
-        .attr("y1", "0%")
-        .attr("x2", "100%")
-        .attr("y2", "0%");
-
-      gradient
-        .append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", "#ffffff");
-
-      gradient
-        .append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", "#06D6A0");
-
-      legend
-        .append("rect")
-        .attr("width", legendWidth)
-        .attr("height", 8)
-        .style("fill", `url(#${gradientId})`);
-
-      legend.append("g").attr("transform", `translate(0, 8)`).call(legendAxis);
-
-      legend
-        .append("text")
-        .attr("x", 0)
-        .attr("y", -6)
-        .attr("font-weight", "bold")
-        .text("Daily Value");
-
-      // Add threshold marker if threshold is provided
-      if (threshold !== null) {
-        // Calculate position of threshold on the scale
-        const thresholdPosition = legendScale(
-          Math.min(Math.max(threshold, min), max),
-        );
-
-        legend
-          .append("line")
-          .attr("x1", thresholdPosition)
-          .attr("x2", thresholdPosition)
-          .attr("y1", -10)
-          .attr("y2", 12)
-          .attr("stroke", "#FF0000")
-          .attr("stroke-width", 2)
-          .attr("stroke-dasharray", "3,3");
-
-        legend
-          .append("text")
-          .attr("x", thresholdPosition + 5)
-          .attr("y", -6)
-          .attr("font-size", "8px")
-          .attr("fill", "#FF0000")
-          .text(`Threshold: ${threshold}`);
-      }
     }
-  }, [data, values, threshold, highlightDate]);
+
+    // Add month outlines and labels
+    const months = year
+      .append("g")
+      .selectAll("g")
+      .data(
+        d3.timeMonths(
+          new Date(new Date(data[0]).getFullYear(), 0, 1),
+          new Date(new Date(data[0]).getFullYear() + 1, 0, 1),
+        ),
+      )
+      .join("g");
+
+    months
+      .filter((d, i) => i)
+      .append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 3)
+      .attr("d", pathMonth);
+
+    months
+      .append("text")
+      .attr(
+        "x",
+        (d) => timeWeek.count(d3.timeYear(d), timeWeek.ceil(d)) * cellSize + 42,
+      )
+      .attr("y", -5)
+      .text(formatMonth);
+
+    // Add legend
+    const legendWidth = 200;
+    const legendHeight = 20;
+    const legendX = width - legendWidth - 10;
+    const legendY = height - 30;
+
+    const legendScale = d3
+      .scaleLinear()
+      .domain([min, max])
+      .range([0, legendWidth]);
+
+    const legendAxis = d3
+      .axisBottom(legendScale)
+      .tickSize(6)
+      .ticks(5)
+      .tickFormat(d3.format(".2f"));
+
+    const legend = svg
+      .append("g")
+      .attr("transform", `translate(${legendX}, ${legendY})`);
+
+    const defs = svg.append("defs");
+
+    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`; // Generate unique ID
+
+    const gradient = defs
+      .append("linearGradient")
+      .attr("id", gradientId)
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "0%");
+
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#ffffff");
+
+    gradient
+      .append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", "#06D6A0");
+
+    legend
+      .append("rect")
+      .attr("width", legendWidth)
+      .attr("height", 8)
+      .style("fill", `url(#${gradientId})`);
+
+    legend.append("g").attr("transform", `translate(0, 8)`).call(legendAxis);
+
+    legend
+      .append("text")
+      .attr("x", 0)
+      .attr("y", -6)
+      .attr("font-weight", "bold")
+      .text("Daily Value");
+
+    // Add threshold marker if threshold is provided
+    if (threshold !== null) {
+      // Calculate position of threshold on the scale
+      const thresholdPosition = legendScale(
+        Math.min(Math.max(threshold, min), max),
+      );
+
+      legend
+        .append("line")
+        .attr("x1", thresholdPosition)
+        .attr("x2", thresholdPosition)
+        .attr("y1", -10)
+        .attr("y2", 12)
+        .attr("stroke", "#FF0000")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "3,3");
+
+      legend
+        .append("text")
+        .attr("x", thresholdPosition - 65)
+        .attr("y", -6)
+        .attr("font-size", "8px")
+        .attr("fill", "#FF0000")
+        .text(`Threshold: ${threshold}`);
+    }
+  }, [data, values, threshold, highlightDate]); // Update when data, values, threshold, or highlightDate changes
+
+  // Find highlighted day data if exists
+  const getHighlightedDayData = () => {
+    if (!highlightDate || !data || data.length === 0) return null;
+
+    const dateStr = new Date(highlightDate).toISOString().split("T")[0];
+    const dailyData = new Map();
+
+    data.forEach((timestamp, index) => {
+      const date = new Date(timestamp);
+      const currDateStr = date.toISOString().split("T")[0];
+      if (currDateStr === dateStr) {
+        const value = values[index];
+
+        if (dailyData.has(dateStr)) {
+          const existing = dailyData.get(dateStr);
+          existing.sum += value;
+        } else {
+          dailyData.set(dateStr, {
+            date: new Date(highlightDate),
+            sum: value,
+            exceedsThreshold: threshold !== null && value > threshold,
+          });
+        }
+      }
+    });
+
+    return dailyData.get(dateStr);
+  };
+
+  const highlightedDayData = getHighlightedDayData();
 
   return (
     <div className="w-full p-4 bg-white rounded-lg shadow">
@@ -462,16 +544,13 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       )}
       <svg ref={svgRef} className="w-full"></svg>
 
-      {selectedDay && (
+      {highlightDate && highlightedDayData && (
         <div className="mt-4 p-3 border rounded bg-gray-50">
-          <h4 className="font-bold">Day Details</h4>
-          <p>Date: {highlightDate}</p>
-          <p>Value: {selectedDay.sum.toFixed(2)}</p>
-          {selectedDay.exceedsThreshold && (
+          <h4 className="font-bold">Highlighted Day</h4>
+          <p>Date: {new Date(highlightDate).toLocaleDateString()}</p>
+          <p>Value: {highlightedDayData.sum.toFixed(2)}</p>
+          {highlightedDayData.exceedsThreshold && (
             <p className="text-red-500">⚠️ Exceeds threshold ({threshold})</p>
-          )}
-          {selectedDay.isHighlighted && (
-            <p className="text-blue-500">📌 Highlighted day</p>
           )}
         </div>
       )}
@@ -481,4 +560,78 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       )}
     </div>
   );
+};
+
+const extractDayData = (yearData: Record<any, number[]>, targetDate: Date) => {
+  // Exit early if data is invalid
+  if (!yearData || !yearData.date || !targetDate) {
+    return { date: null, timestamps: [] };
+  }
+
+  // Convert targetDate to a Date object
+  const targetDateObj = new Date(targetDate);
+
+  // Get the date string in YYYY-MM-DD format for comparison
+  const targetDateStr = targetDateObj.toISOString().split("T")[0];
+
+  // Get all the keys from the yearData object except 'date'
+  const dataKeys = Object.keys(yearData).filter((key) => key !== "date");
+
+  // Initialize the result object
+  const result = {
+    // date: targetDateObj,
+    date: [],
+  };
+
+  // Initialize statistics tracking for each data key
+  const stats = {};
+  dataKeys.forEach((key) => {
+    // Create an array for each data key
+    result[key] = [];
+
+    // Initialize statistics for each key
+    stats[key] = {
+      min: null,
+      max: null,
+      sum: 0,
+      avg: 0,
+      count: 0,
+    };
+  });
+
+  // Filter the data to only include entries from the target date
+  yearData.date.forEach((timestamp, index) => {
+    const date = new Date(timestamp);
+    const dateStr = date.toISOString().split("T")[0];
+
+    // If this timestamp is from the target date, include it
+    if (dateStr === targetDateStr) {
+      result.date.push(timestamp);
+
+      // Process each data key
+      dataKeys.forEach((key) => {
+        if (yearData[key] && yearData[key][index] !== undefined) {
+          const value = yearData[key][index];
+
+          // Add the value to the result
+          result[key].push(value);
+
+          // Update statistics
+          stats[key].sum += value;
+          stats[key].count++;
+
+          // Update min/max
+          if (stats[key].min === null || value < stats[key].min) {
+            stats[key].min = value;
+          }
+
+          if (stats[key].max === null || value > stats[key].max) {
+            stats[key].max = value;
+          }
+        }
+      });
+    }
+  });
+
+  return result;
 };
