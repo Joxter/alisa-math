@@ -150,28 +150,28 @@ export function HomePage() {
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
-
-      {dayDate && (
-        <Line
-          options={options}
-          data={{
-            labels: dayDate.date.map((it) => {
-              // return new Date(it).toISOString().replaceAll('')
-              return new Date(it).toISOString().slice(11, 16);
-            }),
-            datasets: lastKeys.map((key, i) => {
-              let item = {
-                label: key,
-                data: dayDate[key],
-                borderColor: colors[i],
-                // hidden: true,
-              };
-              console.log(item);
-              return item;
-            }),
-          }}
-        />
-      )}
+      <div style={{ width: "1200px" }}>
+        {dayDate && (
+          <Line
+            options={options}
+            data={{
+              labels: dayDate.date.map((it) => {
+                // return new Date(it).toISOString().replaceAll('')
+                return new Date(it).toISOString().slice(11, 16);
+              }),
+              datasets: lastKeys.map((key, i) => {
+                let item = {
+                  label: key,
+                  data: dayDate[key],
+                  borderColor: colors[i],
+                  // hidden: true,
+                };
+                return item;
+              }),
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -252,8 +252,6 @@ const CalendarHeatmap = ({
     const width = cellSize * 53 + 60 + 200; // width with padding for legend
 
     // Define formatting functions
-    const formatValue = d3.format("+.2%");
-    const formatClose = d3.format("$,.2f");
     const formatDate = d3.utcFormat("%x");
     const formatDay = (i) => "SMTWTFS"[i];
     const formatMonth = d3.utcFormat("%b");
@@ -326,13 +324,13 @@ const CalendarHeatmap = ({
       .selectAll("rect")
       .data(processedData)
       .join("rect")
-      .attr("width", cellSize - 1)
-      .attr("height", cellSize - 1)
+      .attr("width", cellSize)
+      .attr("height", cellSize)
       .attr(
         "x",
-        (d) => timeWeek.count(d3.timeYear(d.date), d.date) * cellSize + 40.5,
+        (d) => timeWeek.count(d3.timeYear(d.date), d.date) * cellSize + 40,
       )
-      .attr("y", (d) => d.date.getDay() * cellSize + 0.5)
+      .attr("y", (d) => d.date.getDay() * cellSize)
       .attr("fill", (d) => color(d.sum))
       .attr("stroke", (d) => {
         if (d.isHighlighted) return "#0000FF"; // Blue for highlighted
@@ -340,12 +338,9 @@ const CalendarHeatmap = ({
         return "none";
       })
       .attr("stroke-width", (d) =>
-        d.exceedsThreshold || d.isHighlighted ? 2 : 0,
+        d.exceedsThreshold || d.isHighlighted ? 1 : 0,
       )
-      // .attr("class", "day-cell")
       .on("click", (event, d) => {
-        // console.log(event, d);
-        // setSelectedDay(d);
         onSelect(d);
       })
       .append("title")
@@ -378,7 +373,7 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
           .attr("y", highlightedData.date.getDay() * cellSize + 0.5 - 2)
           .attr("fill", "none")
           .attr("stroke", "#0000FF")
-          .attr("stroke-width", 2)
+          .attr("stroke-width", 1)
           .attr("stroke-dasharray", "2,2")
           .attr("rx", 2)
           .attr("ry", 2);
@@ -402,7 +397,7 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       .append("path")
       .attr("fill", "none")
       .attr("stroke", "#fff")
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 2)
       .attr("d", pathMonth);
 
     months
@@ -416,7 +411,6 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
 
     // Add legend
     const legendWidth = 200;
-    const legendHeight = 20;
     const legendX = width - legendWidth - 10;
     const legendY = height - 30;
 
@@ -437,7 +431,7 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
 
     const defs = svg.append("defs");
 
-    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`; // Generate unique ID
+    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
 
     const gradient = defs
       .append("linearGradient")
@@ -467,9 +461,8 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       .attr("x", 0)
       .attr("y", -6)
       .attr("font-weight", "bold")
-      .text("Daily Value");
+      .text(name);
 
-    // Add threshold marker if threshold is provided
     if (threshold !== null) {
       // Calculate position of threshold on the scale
       const thresholdPosition = legendScale(
@@ -488,50 +481,17 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
 
       legend
         .append("text")
-        .attr("x", thresholdPosition - 65)
-        .attr("y", -6)
+        .attr("x", thresholdPosition - 5)
+        .attr("y", -20)
         .attr("font-size", "8px")
         .attr("fill", "#FF0000")
-        .text(`Threshold: ${threshold}`);
+        .text(`${threshold}`);
     }
   }, [data, values, threshold, highlightDate]); // Update when data, values, threshold, or highlightDate changes
 
-  // Find highlighted day data if exists
-  const getHighlightedDayData = () => {
-    if (!highlightDate || !data || data.length === 0) return null;
-
-    const dateStr = new Date(highlightDate).toISOString().split("T")[0];
-    const dailyData = new Map();
-
-    data.forEach((timestamp, index) => {
-      const date = new Date(timestamp);
-      const currDateStr = date.toISOString().split("T")[0];
-      if (currDateStr === dateStr) {
-        const value = values[index];
-
-        if (dailyData.has(dateStr)) {
-          const existing = dailyData.get(dateStr);
-          existing.sum += value;
-        } else {
-          dailyData.set(dateStr, {
-            date: new Date(highlightDate),
-            sum: value,
-            exceedsThreshold: threshold !== null && value > threshold,
-          });
-        }
-      }
-    });
-
-    return dailyData.get(dateStr);
-  };
-
-  const highlightedDayData = getHighlightedDayData();
-
   return (
     <div className="w-full p-4 bg-white rounded-lg shadow">
-      <h3 className="text-xl font-bold mb-2">
-        {name} Total: {minMax[2].toFixed(2)}
-      </h3>
+      <h3 className="text-xl font-bold mb-2">{name}</h3>
       {minMax[0] !== minMax[1] && (
         <p className="text-sm text-gray-600 mb-2">
           {threshold !== null && (
@@ -543,17 +503,6 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
         </p>
       )}
       <svg ref={svgRef} className="w-full"></svg>
-
-      {highlightDate && highlightedDayData && (
-        <div className="mt-4 p-3 border rounded bg-gray-50">
-          <h4 className="font-bold">Highlighted Day</h4>
-          <p>Date: {new Date(highlightDate).toLocaleDateString()}</p>
-          <p>Value: {highlightedDayData.sum.toFixed(2)}</p>
-          {highlightedDayData.exceedsThreshold && (
-            <p className="text-red-500">⚠️ Exceeds threshold ({threshold})</p>
-          )}
-        </div>
-      )}
 
       {(!data || data.length === 0) && (
         <div className="text-center py-6 text-gray-500">No data available.</div>
@@ -579,24 +528,11 @@ const extractDayData = (yearData: Record<any, number[]>, targetDate: Date) => {
 
   // Initialize the result object
   const result = {
-    // date: targetDateObj,
     date: [],
   };
 
-  // Initialize statistics tracking for each data key
-  const stats = {};
   dataKeys.forEach((key) => {
-    // Create an array for each data key
     result[key] = [];
-
-    // Initialize statistics for each key
-    stats[key] = {
-      min: null,
-      max: null,
-      sum: 0,
-      avg: 0,
-      count: 0,
-    };
   });
 
   // Filter the data to only include entries from the target date
@@ -615,19 +551,6 @@ const extractDayData = (yearData: Record<any, number[]>, targetDate: Date) => {
 
           // Add the value to the result
           result[key].push(value);
-
-          // Update statistics
-          stats[key].sum += value;
-          stats[key].count++;
-
-          // Update min/max
-          if (stats[key].min === null || value < stats[key].min) {
-            stats[key].min = value;
-          }
-
-          if (stats[key].max === null || value > stats[key].max) {
-            stats[key].max = value;
-          }
         }
       });
     }
