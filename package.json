@@ -11,10 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chart.js": "^4.4.9",
     "effector": "^23.2.3",
     "effector-react": "^23.3.0",
     "patronum": "^2.3.0",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "wouter": "^3.3.5"
   },

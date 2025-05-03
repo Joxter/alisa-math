@@ -9,8 +9,6 @@ function App() {
   return (
     <Switch>
       <Route path={prefix + ""} component={HomePage} />
-      <Route path={prefix + "/one"} component={One} />
-      <Route path={prefix + "/two"} component={Two} />
       <Route path={prefix + "*"}>
         <NotFound />
       </Route>
