@@ -61,7 +61,13 @@ export function HomePage() {
   "generator_capacity [kWh]",
   "power_from_grid_after_generator [kW]",
 ];
-*/ return (
+*/
+
+  const [highlightDate, setHighlightDate] = useState(null);
+
+  // const highlightDate = "2024-05-06";
+
+  return (
     <div style={{ display: "grid", gap: "12px", padding: "50px" }}>
       <CalendarHeatmap
         name={"consumption_from_grid_before_battery [kWh]"}
@@ -70,12 +76,14 @@ export function HomePage() {
           (it) => Math.abs(it) / 24,
         )}
         threshold={155}
+        highlightDate={highlightDate}
       />
       <CalendarHeatmap
         name={"battery_usage [kW]"}
         data={calcData["date"]}
         values={calcData["battery_usage [kW]"].map((it) => Math.abs(it) / 4)}
         threshold={null}
+        highlightDate={highlightDate}
       />
       <CalendarHeatmap
         name={"generator_capacity [kWh]"}
@@ -84,6 +92,7 @@ export function HomePage() {
           (it) => Math.abs(it) / 24,
         )}
         threshold={null}
+        highlightDate={highlightDate}
       />
       <CalendarHeatmap
         name={"power_from_grid_after_generator [kW]"}
@@ -92,6 +101,7 @@ export function HomePage() {
           (it) => it / (4 * 24),
         )}
         threshold={155}
+        highlightDate={highlightDate}
       />
 
       {/*
@@ -111,18 +121,23 @@ export function HomePage() {
 }
 
 const CalendarHeatmap = ({
-  data,
-  values,
+  data = [],
+  values = [],
   name = "Calendar Heatmap",
   threshold = null,
+  highlightDate = null,
+  onSelect,
 }: {
   data: number[];
   values: number[];
   name: string;
   threshold?: number | null;
+  highlightDate?: string | null;
+  onSelect?: (day: string) => void;
 }) => {
   const svgRef = useRef(null);
   const [minMax, setMinMax] = useState([0, 0, 0]);
+  const [selectedDay, setSelectedDay] = useState(null);
 
   useEffect(() => {
     // Clear any existing chart
@@ -153,6 +168,10 @@ const CalendarHeatmap = ({
             sum: value,
             // We'll flag if it exceeds threshold
             exceedsThreshold: threshold !== null && value > threshold,
+            // Check if this is the highlighted date
+            isHighlighted:
+              highlightDate !== null &&
+              new Date(highlightDate).toISOString().split("T")[0] === dateStr,
           });
         }
       });
@@ -162,6 +181,10 @@ const CalendarHeatmap = ({
         .map((item) => ({
           ...item,
           exceedsThreshold: threshold !== null && item.sum > threshold,
+          isHighlighted:
+            highlightDate !== null &&
+            new Date(highlightDate).toISOString().split("T")[0] ===
+              item.date.toISOString().split("T")[0],
         }))
         .sort((a, b) => a.date - b.date);
     };
@@ -189,7 +212,7 @@ const CalendarHeatmap = ({
     const max = d3.max(processedData, (d) => d.sum) || 1;
     const total = d3.sum(processedData, (d) => d.sum) || 0;
 
-    // Update state with min/max values
+    // Update state with min/max/total values
     setMinMax([min, max, total]);
 
     const color = d3
@@ -256,125 +279,171 @@ const CalendarHeatmap = ({
       )
       .attr("y", (d) => d.date.getDay() * cellSize + 0.5)
       .attr("fill", (d) => color(d.sum))
-      .attr("stroke", (d) => (d.exceedsThreshold ? "#FF0000" : "none"))
-      .attr("stroke-width", (d) => (d.exceedsThreshold ? 2 : 0))
+      .attr("stroke", (d) => {
+        if (d.isHighlighted) return "#0000FF"; // Blue for highlighted
+        if (d.exceedsThreshold) return "#FF0000"; // Red for threshold exceeded
+        return "none";
+      })
+      .attr("stroke-width", (d) =>
+        d.exceedsThreshold || d.isHighlighted ? 2 : 0,
+      )
+      .attr("class", "day-cell")
+      .on("click", (event, d) => {
+        console.log(event, d);
+        setSelectedDay(d);
+        onSelect(d);
+      })
       .append("title")
       .text(
         (d) => `${formatDate(d.date)}
 Value: ${d.sum.toFixed(2)}
-${d.exceedsThreshold ? `⚠️ Exceeds threshold (${threshold})` : ""}`,
+${d.exceedsThreshold ? `⚠️ Exceeds threshold (${threshold})` : ""}
+${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       );
 
-    // Add month outlines and labels
-    const months = year
-      .append("g")
-      .selectAll("g")
-      .data(
-        d3.timeMonths(
-          new Date(new Date(data[0]).getFullYear(), 0, 1),
-          new Date(new Date(data[0]).getFullYear() + 1, 0, 1),
-        ),
-      )
-      .join("g");
+    // Add a highlight effect for the selected day if there is any
+    if (highlightDate) {
+      const highlightedData = processedData.find((d) => d.isHighlighted);
 
-    months
-      .filter((d, i) => i)
-      .append("path")
-      .attr("fill", "none")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 3)
-      .attr("d", pathMonth);
+      if (highlightedData) {
+        year
+          .append("rect")
+          .attr("width", cellSize + 3)
+          .attr("height", cellSize + 3)
+          .attr(
+            "x",
+            timeWeek.count(
+              d3.timeYear(highlightedData.date),
+              highlightedData.date,
+            ) *
+              cellSize +
+              40.5 -
+              2,
+          )
+          .attr("y", highlightedData.date.getDay() * cellSize + 0.5 - 2)
+          .attr("fill", "none")
+          .attr("stroke", "#0000FF")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "2,2")
+          .attr("rx", 2)
+          .attr("ry", 2);
+      }
 
-    months
-      .append("text")
-      .attr(
-        "x",
-        (d) => timeWeek.count(d3.timeYear(d), timeWeek.ceil(d)) * cellSize + 42,
-      )
-      .attr("y", -5)
-      .text(formatMonth);
+      // Add month outlines and labels
+      const months = year
+        .append("g")
+        .selectAll("g")
+        .data(
+          d3.timeMonths(
+            new Date(new Date(data[0]).getFullYear(), 0, 1),
+            new Date(new Date(data[0]).getFullYear() + 1, 0, 1),
+          ),
+        )
+        .join("g");
 
-    // Add legend
-    const legendWidth = 200;
-    const legendHeight = 20;
-    const legendX = width - legendWidth - 10;
-    const legendY = height - 30;
+      months
+        .filter((d, i) => i)
+        .append("path")
+        .attr("fill", "none")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 3)
+        .attr("d", pathMonth);
 
-    const legendScale = d3
-      .scaleLinear()
-      .domain([min, max])
-      .range([0, legendWidth]);
+      months
+        .append("text")
+        .attr(
+          "x",
+          (d) =>
+            timeWeek.count(d3.timeYear(d), timeWeek.ceil(d)) * cellSize + 42,
+        )
+        .attr("y", -5)
+        .text(formatMonth);
 
-    const legendAxis = d3
-      .axisBottom(legendScale)
-      .tickSize(6)
-      .ticks(5)
-      .tickFormat(d3.format(".2f"));
+      // Add legend
+      const legendWidth = 200;
+      const legendHeight = 20;
+      const legendX = width - legendWidth - 10;
+      const legendY = height - 30;
 
-    const legend = svg
-      .append("g")
-      .attr("transform", `translate(${legendX}, ${legendY})`);
+      const legendScale = d3
+        .scaleLinear()
+        .domain([min, max])
+        .range([0, legendWidth]);
 
-    const defs = svg.append("defs");
+      const legendAxis = d3
+        .axisBottom(legendScale)
+        .tickSize(6)
+        .ticks(5)
+        .tickFormat(d3.format(".2f"));
 
-    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`; // Generate unique ID
+      const legend = svg
+        .append("g")
+        .attr("transform", `translate(${legendX}, ${legendY})`);
 
-    const gradient = defs
-      .append("linearGradient")
-      .attr("id", gradientId)
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "100%")
-      .attr("y2", "0%");
+      const defs = svg.append("defs");
 
-    gradient.append("stop").attr("offset", "0%").attr("stop-color", "#ffffff");
+      const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`; // Generate unique ID
 
-    gradient
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", "#06D6A0");
+      const gradient = defs
+        .append("linearGradient")
+        .attr("id", gradientId)
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
 
-    legend
-      .append("rect")
-      .attr("width", legendWidth)
-      .attr("height", 8)
-      .style("fill", `url(#${gradientId})`);
+      gradient
+        .append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#ffffff");
 
-    legend.append("g").attr("transform", `translate(0, 8)`).call(legendAxis);
-
-    legend
-      .append("text")
-      .attr("x", 0)
-      .attr("y", -6)
-      .attr("font-weight", "bold")
-      .text("Daily Value");
-
-    // Add threshold marker if threshold is provided
-    if (threshold !== null) {
-      // Calculate position of threshold on the scale
-      const thresholdPosition = legendScale(
-        Math.min(Math.max(threshold, min), max),
-      );
+      gradient
+        .append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#06D6A0");
 
       legend
-        .append("line")
-        .attr("x1", thresholdPosition)
-        .attr("x2", thresholdPosition)
-        .attr("y1", -10)
-        .attr("y2", 12)
-        .attr("stroke", "#FF0000")
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "3,3");
+        .append("rect")
+        .attr("width", legendWidth)
+        .attr("height", 8)
+        .style("fill", `url(#${gradientId})`);
+
+      legend.append("g").attr("transform", `translate(0, 8)`).call(legendAxis);
 
       legend
         .append("text")
-        .attr("x", thresholdPosition - 65)
+        .attr("x", 0)
         .attr("y", -6)
-        .attr("font-size", "8px")
-        .attr("fill", "#FF0000")
-        .text(`Threshold: ${threshold}`);
+        .attr("font-weight", "bold")
+        .text("Daily Value");
+
+      // Add threshold marker if threshold is provided
+      if (threshold !== null) {
+        // Calculate position of threshold on the scale
+        const thresholdPosition = legendScale(
+          Math.min(Math.max(threshold, min), max),
+        );
+
+        legend
+          .append("line")
+          .attr("x1", thresholdPosition)
+          .attr("x2", thresholdPosition)
+          .attr("y1", -10)
+          .attr("y2", 12)
+          .attr("stroke", "#FF0000")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "3,3");
+
+        legend
+          .append("text")
+          .attr("x", thresholdPosition + 5)
+          .attr("y", -6)
+          .attr("font-size", "8px")
+          .attr("fill", "#FF0000")
+          .text(`Threshold: ${threshold}`);
+      }
     }
-  }, [data, values, threshold]);
+  }, [data, values, threshold, highlightDate]);
 
   return (
     <div className="w-full p-4 bg-white rounded-lg shadow">
@@ -392,6 +461,24 @@ ${d.exceedsThreshold ? `⚠️ Exceeds threshold (${threshold})` : ""}`,
         </p>
       )}
       <svg ref={svgRef} className="w-full"></svg>
+
+      {selectedDay && (
+        <div className="mt-4 p-3 border rounded bg-gray-50">
+          <h4 className="font-bold">Day Details</h4>
+          <p>Date: {highlightDate}</p>
+          <p>Value: {selectedDay.sum.toFixed(2)}</p>
+          {selectedDay.exceedsThreshold && (
+            <p className="text-red-500">⚠️ Exceeds threshold ({threshold})</p>
+          )}
+          {selectedDay.isHighlighted && (
+            <p className="text-blue-500">📌 Highlighted day</p>
+          )}
+        </div>
+      )}
+
+      {(!data || data.length === 0) && (
+        <div className="text-center py-6 text-gray-500">No data available.</div>
+      )}
     </div>
   );
 };
