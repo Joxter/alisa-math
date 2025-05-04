@@ -116,7 +116,7 @@ export function CalendarHeatmap({
     const color = d3
       .scaleLinear()
       .domain([min, max])
-      .range(["#ffffff", "#06D6A0"]);
+      .range(["#f2faf7", "#06D6A0"]);
 
     // Create SVG element
     const svg = d3
