@@ -98,6 +98,7 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 
 export function HomePage() {
   const [highlightDate, setHighlightDate] = useState(null);
+  const [threshold, setThreshold] = useState(155); // 155 891
 
   function dayOf(date?: any) {
     return date && date.date.toISOString().split("T")[0];
@@ -107,11 +108,20 @@ export function HomePage() {
     ? extractDayData(calcData, highlightDate.date)
     : null;
 
-  const threshold = 155;
-  // const threshold = 891;
-
   return (
     <div style={{ display: "grid", gap: "12px", padding: "50px" }}>
+      <div style={{ width: "500px", display: "grid" }}>
+        <input
+          type="range"
+          min="0"
+          max="1000"
+          value={threshold}
+          onChange={(e) => {
+            setThreshold(+e.target.value);
+          }}
+        />
+        <p>threshold: {threshold}</p>
+      </div>
       <CalendarHeatmap
         name={"consumption_from_grid_before_battery [kWh]"}
         data={calcData["date"]}
@@ -423,7 +433,7 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
       .axisBottom(legendScale)
       .tickSize(6)
       .ticks(5)
-      .tickFormat(d3.format(".2f"));
+      .tickFormat(d3.format(".0f"));
 
     const legend = svg
       .append("g")
@@ -431,7 +441,7 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
 
     const defs = svg.append("defs");
 
-    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
+    const gradientId = `gradient-${Math.random().toString(36).slice(2, 9)}`;
 
     const gradient = defs
       .append("linearGradient")
@@ -456,13 +466,6 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
 
     legend.append("g").attr("transform", `translate(0, 8)`).call(legendAxis);
 
-    legend
-      .append("text")
-      .attr("x", 0)
-      .attr("y", -6)
-      .attr("font-weight", "bold")
-      .text(name);
-
     if (threshold !== null) {
       // Calculate position of threshold on the scale
       const thresholdPosition = legendScale(
@@ -473,16 +476,15 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
         .append("line")
         .attr("x1", thresholdPosition)
         .attr("x2", thresholdPosition)
-        .attr("y1", -10)
-        .attr("y2", 12)
+        .attr("y1", -5)
+        .attr("y2", 5)
         .attr("stroke", "#FF0000")
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "3,3");
+        .attr("stroke-width", 1);
 
       legend
         .append("text")
         .attr("x", thresholdPosition - 5)
-        .attr("y", -20)
+        .attr("y", -10)
         .attr("font-size", "8px")
         .attr("fill", "#FF0000")
         .text(`${threshold}`);
@@ -492,16 +494,6 @@ ${d.isHighlighted ? `📌 Highlighted day` : ""}`,
   return (
     <div className="w-full p-4 bg-white rounded-lg shadow">
       <h3 className="text-xl font-bold mb-2">{name}</h3>
-      {minMax[0] !== minMax[1] && (
-        <p className="text-sm text-gray-600 mb-2">
-          {threshold !== null && (
-            <span className="ml-2">
-              Threshold:{" "}
-              <span className="text-red-500 font-medium">{threshold}</span>
-            </span>
-          )}
-        </p>
-      )}
       <svg ref={svgRef} className="w-full"></svg>
 
       {(!data || data.length === 0) && (
