@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import calcData from "./calculationPS_small.json";
-// import calcData from "./calculationPS_small (2).json";
+// import calcData from "./calculationPS_small.json";
+import calcData from "./calculationPS_small (2).json";
 import { CalendarHeatmap } from "./HeatMap.tsx";
 import { LineChart } from "./LineChart.tsx";
 
@@ -26,6 +26,9 @@ const lastKeys = [
 const battery_usage_abs = calcData["battery_usage [kW]"].map((it) =>
   Math.abs(it),
 );
+const consumption_x4 = calcData[
+  "consumption_from_grid_before_battery [kWh]"
+].map((it) => it * 4);
 
 /*
 ALL KEYS
@@ -44,7 +47,8 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 
 export function HomePage() {
   const [highlightDate, setHighlightDate] = useState(null);
-  const [threshold, setThreshold] = useState(890); // 155 890
+  // const [threshold, setThreshold] = useState(890);
+  const [threshold, setThreshold] = useState(155);
 
   function dayOf(date?: any) {
     return date && date.date.toISOString().split("T")[0];
@@ -74,7 +78,7 @@ export function HomePage() {
         name={"consumption_from_grid_before_battery [kWh]"}
         data={calcData["date"]}
         values={calcData["consumption_from_grid_before_battery [kWh]"]}
-        threshold={threshold * 24}
+        threshold={threshold / 4}
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
@@ -98,7 +102,7 @@ export function HomePage() {
         name={"power_from_grid_after_generator [kW]"}
         data={calcData["date"]}
         values={calcData["power_from_grid_after_generator [kW]"]}
-        threshold={threshold * (4 * 24)}
+        threshold={threshold}
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
@@ -111,6 +115,11 @@ export function HomePage() {
           />
         )}
       </div>
+      {/*
+      <div style={{ width: "1200px" }}>
+        <LineChart calcData={calcData} lastKeys={keys} />
+      </div>
+      */}
     </div>
   );
 }

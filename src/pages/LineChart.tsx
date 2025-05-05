@@ -60,7 +60,7 @@ export function LineChart({
 }: {
   calcData: any;
   lastKeys: any;
-  day: Date;
+  day?: Date;
 }) {
   const dayDate = useMemo(() => {
     if (day) {
@@ -71,8 +71,11 @@ export function LineChart({
       });
       return res;
     }
-
-    return null;
+    let res = { ...calcData };
+    res.date = res.date.map((it) => {
+      return new Date(it).toISOString().slice(11, 16);
+    });
+    return res;
   }, [calcData, day]);
 
   return (
