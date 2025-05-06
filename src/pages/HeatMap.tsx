@@ -21,22 +21,11 @@ ChartJS.register(
   Legend,
 );
 
-const colors = [
-  "#e60049",
-  "#0bb4ff",
-  "#50e991",
-  "#e6d800",
-  "#9b19f5",
-  "#ffa300",
-  "#dc0ab4",
-  "#b3d4ff",
-  "#00bfa0",
-];
-
 export function CalendarHeatmap({
   data = [],
   values = [],
   name = "Calendar Heatmap",
+  color = "#06D6A0",
   threshold = null,
   highlightDate = null,
   onSelect,
@@ -44,6 +33,7 @@ export function CalendarHeatmap({
   data: number[];
   values: number[];
   name: string;
+  color?: string;
   threshold?: number | null;
   highlightDate?: string | null;
   onSelect?: (day: any) => void;
@@ -149,7 +139,7 @@ export function CalendarHeatmap({
     const colorBelow = d3
       .scaleLinear()
       .domain([min, threshold !== null ? threshold : max])
-      .range(["#f2faf7", "#06D6A0"]);
+      .range(["#f2faf7", color]);
 
     const lightRed = "#ffcccb";
 
@@ -376,7 +366,7 @@ export function CalendarHeatmap({
     gradientBelow
       .append("stop")
       .attr("offset", "100%")
-      .attr("stop-color", "#06D6A0");
+      .attr("stop-color", color);
 
     // Create gradient for values above threshold
     const gradientAbove = defs
