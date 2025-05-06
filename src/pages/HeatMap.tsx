@@ -188,7 +188,7 @@ export function CalendarHeatmap({
       .attr("y", -5)
       .attr("font-weight", "bold")
       .attr("text-anchor", "start")
-      .text(processedData[0].date.getFullYear());
+      .text(processedData[10].date.getFullYear());
 
     // Add day labels (Sun, Mon, etc.)
     year
@@ -300,8 +300,8 @@ export function CalendarHeatmap({
       .selectAll("g")
       .data(
         d3.timeMonths(
-          new Date(processedData[0].date.getFullYear(), 0, 1),
-          new Date(processedData[0].date.getFullYear() + 1, 0, 1),
+          new Date(processedData[10].date.getFullYear(), 0, 1),
+          new Date(processedData[10].date.getFullYear() + 1, 0, 1),
         ),
       )
       .join("g");

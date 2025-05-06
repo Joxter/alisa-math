@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-// import calcData from "./calculationPS_small.json";
-import calcData from "./calculationPS_small (2).json";
+import calcData from "./calculationPS_small.json";
+// import calcData from "./calculationPS_small (2).json";
 import { CalendarHeatmap } from "./HeatMap.tsx";
 import { LineChart } from "./LineChart.tsx";
 
@@ -47,8 +47,8 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 
 export function HomePage() {
   const [highlightDate, setHighlightDate] = useState(null);
-  // const [threshold, setThreshold] = useState(890);
-  const [threshold, setThreshold] = useState(155);
+  const [threshold, setThreshold] = useState(890);
+  // const [threshold, setThreshold] = useState(155);
 
   function dayOf(date?: any) {
     return date && date.date.toISOString().split("T")[0];
@@ -79,6 +79,7 @@ export function HomePage() {
         data={calcData["date"]}
         values={calcData["consumption_from_grid_before_battery [kWh]"]}
         threshold={threshold / 4}
+        color="#0bb4ff"
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
@@ -95,6 +96,7 @@ export function HomePage() {
         data={calcData["date"]}
         values={calcData["generator_capacity [kWh]"]}
         threshold={null}
+        color="#dc0ab4"
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
@@ -103,6 +105,7 @@ export function HomePage() {
         data={calcData["date"]}
         values={calcData["power_from_grid_after_generator [kW]"]}
         threshold={threshold}
+        color="#0bb4ff"
         highlightDate={dayOf(highlightDate)}
         onSelect={setHighlightDate}
       />
@@ -123,3 +126,15 @@ export function HomePage() {
     </div>
   );
 }
+
+const colors = [
+  "#e60049",
+  "#0bb4ff",
+  "#50e991",
+  "#e6d800",
+  "#9b19f5",
+  "#ffa300",
+  "#dc0ab4",
+  "#b3d4ff",
+  "#00bfa0",
+];
