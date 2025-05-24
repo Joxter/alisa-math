@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import calcData from "./calculationPS_small.json";
-// import calcData from "./calculationPS_small (2).json";
+// import calcData from "./calculationPS_small.json";
+import calcData from "./calculationPS_small (2).json";
 import { CalendarHeatmap } from "./HeatMap.tsx";
 import { LineChart } from "./LineChart.tsx";
 
@@ -18,6 +18,7 @@ const keys = Object.keys(calcData).filter((it) => !bad.includes(it));
 const lastKeys = [
   "consumption_from_grid_before_battery [kWh]",
   "battery_usage [kW]",
+  "battery_state_of_charge [%]",
   "generator_capacity [kWh]",
   "power_from_grid_after_battery [kW]",
   "power_from_grid_after_generator [kW]",
@@ -47,8 +48,8 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 
 export function HomePage() {
   const [highlightDate, setHighlightDate] = useState(null);
-  const [threshold, setThreshold] = useState(890);
-  // const [threshold, setThreshold] = useState(155);
+  // const [threshold, setThreshold] = useState(890);
+  const [threshold, setThreshold] = useState(155);
 
   function dayOf(date?: any) {
     return date && date.date.toISOString().split("T")[0];
