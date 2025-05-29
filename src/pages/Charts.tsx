@@ -46,7 +46,7 @@ battery_usage [kW],power_from_grid_after_generator [kW]
 
 */
 
-export function HomePage() {
+export function Charts() {
   const [highlightDate, setHighlightDate] = useState(null);
   // const [threshold, setThreshold] = useState(890);
   const [threshold, setThreshold] = useState(155);

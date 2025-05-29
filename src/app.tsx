@@ -1,14 +1,16 @@
 import "./app.module.css";
 import { Link, Route, Router, Switch } from "wouter";
 import { NotFound } from "./pages/NotFound.tsx";
-import { HomePage } from "./pages/HomePage.tsx";
+import { Charts } from "./pages/Charts.tsx";
 import { Layout } from "./pages/Layout.tsx";
 import { prefix } from "./config.ts";
+import { Excel } from "./pages/Excel.tsx";
 
 function App() {
   return (
     <Switch>
-      <Route path={prefix + ""} component={HomePage} />
+      <Route path={prefix + "/excel"} component={Excel} />
+      <Route path={prefix + ""} component={Charts} />
       <Route path={prefix + "*"}>
         <NotFound />
       </Route>
