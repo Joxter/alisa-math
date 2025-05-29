@@ -3,15 +3,21 @@ import React, { CSSProperties, ReactNode, useState } from "react";
 const callWidth = 110;
 const callHeight = 40;
 
+// const layoutStr = `
+// viz viz  pc  pc chart chart chart chart val
+// viz viz  pc  pc chart chart chart chart val
+// viz viz  ch dis chart chart chart chart val
+// viz viz  ch dis chart chart chart chart val
+// viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
+// viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
+// viz2 viz2  min2 max2 chart3 chart3 chart3 chart3 val2
+// viz2 viz2  cur2 avg2 chart3 chart3 chart3 chart3 val2
+// `.trim();
+
 const layoutStr = `
-viz viz  pc  pc chart chart chart chart val
-viz viz  pc  pc chart chart chart chart val
-viz viz  ch dis chart chart chart chart val
-viz viz  ch dis chart chart chart chart val
-viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
-viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
-viz2 viz2  min2 max2 chart3 chart3 chart3 chart3 val2
-viz2 viz2  cur2 avg2 chart3 chart3 chart3 chart3 val2
+a d e e k l m 1 1 1 z
+b d f g k 2 2 2 2 2 y
+c d h h 3 3 n o o p p
 `.trim();
 
 type Lay = {
@@ -72,6 +78,23 @@ export function Dashboards() {
 
   gridToGroups(boxes, "v");
 
+  const context: Context = {
+    visited: [] as string[],
+    timeSeries: ["1", "2", "3"],
+    lefty: [] as string[],
+    righty: [] as string[],
+  };
+  const griddd = gridToLayout(boxes)
+    .trim()
+    .split("\n")
+    .map((line) => {
+      return line.trim().split(/\s+/);
+    });
+
+  // console.log(griddd);
+  markLefty(griddd, [0, 0], context);
+  console.log(context);
+
   return (
     <>
       <div>
@@ -82,7 +105,7 @@ export function Dashboards() {
         <pre>{gridToLayout(boxes)}</pre>
       </div>
       */}
-      <Grid style={{ padding: "12px" }} cols={10} rows={10}>
+      <Grid style={{ padding: "12px" }} cols={15} rows={10}>
         {boxes.map((it, i) => {
           const grid = {
             gridColumn: `${it.x + 1} / span ${it.w}`,
@@ -92,7 +115,11 @@ export function Dashboards() {
             <div
               key={i}
               style={{
-                background: "#fff",
+                background: context.lefty.includes(it.name)
+                  ? "#c0cdf4"
+                  : context.timeSeries.includes(it.name)
+                    ? "#fff"
+                    : "#d3f4c0",
                 borderRadius: "2px",
                 padding: "4px",
                 fontVariantNumeric: "tabular-nums",
@@ -156,7 +183,7 @@ function Grid({
 function Cell({ name, w, h }: { name: string; w: number; h: number }) {
   return (
     <Grid cols={w} rows={h} background="transparent">
-      {Array(w * h)
+      {Array(1) // w * h
         .fill(0)
         .map((_, i) => {
           return (
@@ -241,4 +268,38 @@ function gridToLayout(grid: Lay[]): string {
   });
 
   return gridMap.map((it) => it.join(" ")).join("\n");
+}
+
+type Context = {
+  timeSeries: string[];
+  visited: string[];
+  lefty: string[];
+  righty: string[];
+};
+
+function markLefty(
+  grid: Array<string[]>,
+  current: [number, number],
+  context: Context,
+) {
+  if (context.visited.includes(current.join("|"))) return;
+  let cell = grid[current[0]]?.[current[1]];
+  if (!cell) return;
+
+  context.visited.push(current.join("|"));
+  context.lefty.push(cell);
+
+  let rightCell = grid[current[0]][current[1] + 1];
+  let leftCell = grid[current[0]][current[1] - 1];
+  let downCell = grid[current[0] + 1]?.[current[1]];
+
+  if (!context.timeSeries.includes(rightCell)) {
+    markLefty(grid, [current[0], current[1] + 1], context);
+  }
+
+  markLefty(grid, [current[0], current[1] - 1], context);
+
+  if (cell === downCell) {
+    markLefty(grid, [current[0] + 1, current[0]], context);
+  }
 }
