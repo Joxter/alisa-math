@@ -9,6 +9,9 @@ const gridPadding = 12;
 const borderRadius = 2;
 const cellPadding = 2;
 
+const timeSeries = ["1", "2", "3", "7"];
+// const timeSeries = ["chart", "chart1", "chart2", "chart3", "chart5"];
+
 // const layoutStr = `
 // viz viz  pc  pc chart chart chart chart val
 // viz viz  pc  pc chart chart chart chart val
@@ -20,28 +23,28 @@ const cellPadding = 2;
 // viz2 viz2  cur2 avg2 chart3 chart3 chart3 chart3 val2
 // `.trim();
 
-const layoutStr = `
-viz viz  pc  pc chart chart chart chart val
-viz viz  pc  pc chart chart chart chart val
-viz viz  ch dis chart chart chart chart val
-viz viz  ch dis chart chart chart chart val
-chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
-chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
-chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
-chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
-viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
-viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
-viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
-viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
-viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
-viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
-viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
-viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
-viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
-viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
-viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
-viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
-`.trim();
+// const layoutStr = `
+// viz viz  pc  pc chart chart chart chart val
+// viz viz  pc  pc chart chart chart chart val
+// viz viz  ch dis chart chart chart chart val
+// viz viz  ch dis chart chart chart chart val
+// chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+// chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+// chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+// chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+// viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+// viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+// viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+// viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+// viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+// viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+// viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+// viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+// viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+// viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+// viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
+// viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
+// `.trim();
 
 // const layoutStr = `
 // a d e e k l m 1 1 1 z
@@ -50,12 +53,12 @@ viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
 // 0 0 0 9 9 9 8 8 8 8 7
 // `.trim();
 
-// const layoutStr = `
-// d e k l m 1 1 1 z
-// d f k 2 2 2 2 2 y
-// d h 3 3 n o o p p
-// 0 0 9 9 8 8 8 8 7
-// `.trim();
+const layoutStr = `
+d e k l m 1 1 1 z
+d f k 2 2 2 2 2 y
+d h 3 3 n o o p p
+0 0 9 9 8 8 8 8 7
+`.trim();
 
 type Lay = {
   name: string;
@@ -117,8 +120,7 @@ export function Dashboards() {
 
   const context: Context = {
     visited: [] as string[],
-    // timeSeries: ["1", "2", "3", "7"],
-    timeSeries: ["chart", "chart1", "chart2", "chart3", "chart5"],
+    timeSeries,
     lefty: [] as string[],
     righty: [] as string[],
   };
@@ -148,16 +150,17 @@ export function Dashboards() {
           gridPadding * 2 +
           (griddd[0].length - 1) * gap,
         border: "1px solid red",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <div>
         <pre>{layoutStr}</pre>
       </div>
-      {/*
-      <div>
-        <pre>{gridToLayout(boxes)}</pre>
-      </div>
-      */}
+      <h2>
+        <br />
+        Static
+      </h2>
       <Grid
         style={{ padding: gridPadding + "px" }}
         cols={15}
@@ -190,19 +193,16 @@ export function Dashboards() {
                   Some very long label without any value
                 </p>
               ) : (
-                <Cell
-                  name={
-                    it.name +
-                    (context.timeSeries.includes(it.name) ? "<-->" : "")
-                  }
-                  w={it.w}
-                  h={it.h}
-                />
+                <Cell name={it.name} w={it.w} h={it.h} />
               )}
             </div>
           );
         })}
       </Grid>
+      <h2>
+        <br />
+        Responsive
+      </h2>
 
       <div
         style={{
@@ -267,14 +267,7 @@ export function Dashboards() {
                   Some very long label without any value
                 </p>
               ) : (
-                <Cell
-                  name={
-                    it.name +
-                    (context.timeSeries.includes(it.name) ? "<-->" : "")
-                  }
-                  w={it.w}
-                  h={it.h}
-                />
+                <Cell name={it.name} w={it.w} h={it.h} />
               )}
             </div>
           );
@@ -313,7 +306,36 @@ function Grid({
   );
 }
 
+function randomChart(length = 10) {
+  // Various Unicode symbols for different chart styles
+  const symbols = [
+    ...["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"], // Block elements
+    ...["_", "▁", "▂", "▃", "▄", "▅", "▆", "▇"], // Ascending blocks
+    ...["▒", "▓", "█", "█", "█", "█", "█"], // Shading
+  ];
+
+  // Pick a random symbol set
+  const symbolSet = symbols;
+
+  // Generate random values and map to symbols
+  const chart = Array.from({ length }, () => {
+    const value = Math.floor(Math.random() * symbolSet.length);
+    return symbolSet[value];
+  }).join("");
+
+  return chart;
+}
+
 function Cell({ name, w, h }: { name: string; w: number; h: number }) {
+  if (timeSeries.includes(name)) {
+    return (
+      <div style={{ overflow: "hidden" }}>
+        <p style={{ fontSize: "11px", lineHeight: "1" }}>{name}</p>
+        <p style={{ fontSize: "22px", lineHeight: "1" }}>{randomChart(100)}</p>
+      </div>
+    );
+  }
+
   return (
     <Grid cols={w} rows={h} background="transparent">
       {Array(1) // w * h
