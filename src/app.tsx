@@ -5,11 +5,13 @@ import { Charts } from "./pages/Charts.tsx";
 import { Layout } from "./pages/Layout.tsx";
 import { prefix } from "./config.ts";
 import { Excel } from "./pages/Excel.tsx";
+import { Dashboards } from "./pages/Dashboards.tsx";
 
 function App() {
   return (
     <Switch>
       <Route path={prefix + "/excel"} component={Excel} />
+      <Route path={prefix + "/dashboard"} component={Dashboards} />
       <Route path={prefix + ""} component={Charts} />
       <Route path={prefix + "*"}>
         <NotFound />
