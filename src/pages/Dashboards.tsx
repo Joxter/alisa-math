@@ -4,10 +4,14 @@ const callWidth = 110;
 const callHeight = 40;
 
 const layoutStr = `
-viz viz  pc  pc chart chart chart chart val current
-viz viz  pc  pc chart chart chart chart val avg
-viz viz  ch dis chart chart chart chart val max
-viz viz  ch dis chart chart chart chart val min
+viz viz  pc  pc chart chart chart chart val
+viz viz  pc  pc chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
+viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
+viz2 viz2  pc2  pc2  chart2 chart2 chart2 chart2 val2
+viz2 viz2  min2 max2 chart3 chart3 chart3 chart3 val2
+viz2 viz2  cur2 avg2 chart3 chart3 chart3 chart3 val2
 `.trim();
 
 type Lay = {
@@ -66,11 +70,18 @@ function layoutToGrid(layout: string): Lay[] {
 export function Dashboards() {
   const boxes: Lay[] = layoutToGrid(layoutStr);
 
+  gridToGroups(boxes, "v");
+
   return (
     <>
       <div>
         <pre>{layoutStr}</pre>
       </div>
+      {/*
+      <div>
+        <pre>{gridToLayout(boxes)}</pre>
+      </div>
+      */}
       <Grid style={{ padding: "12px" }} cols={10} rows={10}>
         {boxes.map((it, i) => {
           const grid = {
@@ -147,9 +158,9 @@ function Cell({ name, w, h }: { name: string; w: number; h: number }) {
     <Grid cols={w} rows={h} background="transparent">
       {Array(w * h)
         .fill(0)
-        .map(() => {
+        .map((_, i) => {
           return (
-            <div>
+            <div key={i}>
               <p style={{ fontSize: "11px", lineHeight: "1" }}>{name}</p>
               <p style={{ fontSize: "22px", lineHeight: "1" }}>
                 {(Math.floor(Math.random() * 4999) - 2500) / 10}
@@ -161,4 +172,73 @@ function Cell({ name, w, h }: { name: string; w: number; h: number }) {
         })}
     </Grid>
   );
+}
+
+function gridToGroups(grid: Lay[], dir: ">" | "v"): Array<string[]> {
+  let layout = gridToLayout(grid)
+    .split("\n")
+    .map((it) => it.split(" "));
+
+  let groups = [] as Array<string[]>;
+
+  if (dir === ">") {
+    let prevL = 0;
+    let names = layout.map((it) => it[0]);
+
+    for (let i = 1; i <= layout[0].length; i++) {
+      if (layout.every((it) => it[i] !== it[i - 1])) {
+        // console.log("GROUP!", prevL, i, [...new Set(names)]);
+        groups.push([...new Set(names)]);
+        names = [];
+        prevL = i;
+      }
+      names.push(...layout.map((it) => it[i]));
+    }
+  } else {
+    let prevT = 0;
+    let names = [...layout[0]];
+
+    for (let i = 1; i <= layout.length; i++) {
+      if (
+        Array(layout[0].length)
+          .fill(0)
+          .every((_, j) => {
+            return layout[i]?.[j] !== layout[i - 1][j];
+          })
+      ) {
+        // console.log("GROUP!", prevT, i, [...new Set(names)]);
+        groups.push([...new Set(names)]);
+        names = [];
+        prevT = i;
+      }
+      names.push(
+        ...Array(layout[0].length)
+          .fill(0)
+          .map((_, j) => layout[i]?.[j]),
+      );
+    }
+  }
+
+  // console.log({ dir });
+  // console.log(groups.map((g) => g.join(" ")).join("\n"));
+
+  return groups;
+}
+
+function gridToLayout(grid: Lay[]): string {
+  let gridMap: Array<string[]> = [];
+
+  grid.forEach((it) => {
+    for (let i = 0; i < it.h; i++) {
+      for (let j = 0; j < it.w; j++) {
+        let cellX = it.x + j;
+        let cellY = it.y + i;
+
+        if (!gridMap[cellY]) gridMap[cellY] = [] as string[];
+        gridMap[cellY][cellX] = it.name;
+      }
+    }
+  });
+
+  return gridMap.map((it) => it.join(" ")).join("\n");
 }
