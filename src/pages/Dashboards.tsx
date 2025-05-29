@@ -1,4 +1,10 @@
-import React, { CSSProperties, ReactNode, useState } from "react";
+import React, {
+  CSSProperties,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 const cellWidth = 110;
 const cellHeight = 40;
@@ -9,7 +15,7 @@ const gridPadding = 12;
 const borderRadius = 2;
 const cellPadding = 2;
 
-const timeSeries = ["1", "2", "3", "7"];
+const timeSeries = ["1", "2", "3", "7", "f"];
 // const timeSeries = ["chart", "chart1", "chart2", "chart3", "chart5"];
 
 // const layoutStr = `
@@ -23,28 +29,28 @@ const timeSeries = ["1", "2", "3", "7"];
 // viz2 viz2  cur2 avg2 chart3 chart3 chart3 chart3 val2
 // `.trim();
 
-// const layoutStr = `
-// viz viz  pc  pc chart chart chart chart val
-// viz viz  pc  pc chart chart chart chart val
-// viz viz  ch dis chart chart chart chart val
-// viz viz  ch dis chart chart chart chart val
+const layoutStr = `
+viz viz  pc  pc chart chart chart chart val
+viz viz  pc  pc chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
 // chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
 // chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
 // chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
 // chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
-// viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
-// viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
-// viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
-// viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
-// viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
-// viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
-// viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
-// viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
-// viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
-// viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
-// viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
-// viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
-// `.trim();
+viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
+`.trim();
 
 // const layoutStr = `
 // a d e e k l m 1 1 1 z
@@ -53,12 +59,19 @@ const timeSeries = ["1", "2", "3", "7"];
 // 0 0 0 9 9 9 8 8 8 8 7
 // `.trim();
 
-const layoutStr = `
-d e k l m 1 1 1 z
-d f k 2 2 2 2 2 y
-d h 3 3 n o o p p
-0 0 9 9 8 8 8 8 7
-`.trim();
+// const layoutStr = `
+// d e k l m 1 1 1 z
+// d f k 2 2 2 2 2 y
+// d h 3 3 n o o p p
+// 0 0 9 9 8 8 8 8 7
+// `.trim();
+
+// const layoutStr = `
+// d k l 1 z
+// d k 2 2 y
+// d 3 3 p p
+// 0 9 9 8 7
+// `.trim();
 
 type Lay = {
   name: string;
@@ -74,6 +87,9 @@ function layoutToGrid(layout: string): Lay[] {
   let grid = layout
     .trim()
     .split("\n")
+    .filter((line) => {
+      return !line.trim().startsWith("//");
+    })
     .map((line) => {
       return line.trim().split(/\s+/);
     });
@@ -163,7 +179,7 @@ export function Dashboards() {
       </h2>
       <Grid
         style={{ padding: gridPadding + "px" }}
-        cols={15}
+        cols={griddd[0].length}
         rows={griddd.length}
       >
         {boxes.map((it, i) => {
@@ -201,7 +217,50 @@ export function Dashboards() {
       </Grid>
       <h2>
         <br />
-        Responsive
+        Wide
+      </h2>
+      <Grid
+        style={{ padding: gridPadding + "px" }}
+        cols={griddd[0].length}
+        elastic
+        rows={griddd.length}
+      >
+        {boxes.map((it, i) => {
+          const grid = {
+            gridColumn: `${it.x + 1} / span ${it.w}`,
+            gridRow: `${it.y + 1} / span ${it.h}`,
+          };
+          return (
+            <div
+              key={i}
+              style={{
+                background: context.lefty.includes(it.name)
+                  ? "#c0cdf4"
+                  : context.righty.includes(it.name)
+                    ? "#d3f4c0"
+                    : context.timeSeries.includes(it.name)
+                      ? "#fff"
+                      : "red",
+                borderRadius: borderRadius + "px",
+                padding: cellPadding + "px",
+                fontVariantNumeric: "tabular-nums",
+                ...grid,
+              }}
+            >
+              {it.name === "avg" ? (
+                <p style={{ fontSize: "11px", lineHeight: "1" }}>
+                  Some very long label without any value
+                </p>
+              ) : (
+                <Cell name={it.name} w={it.w} h={it.h} />
+              )}
+            </div>
+          );
+        })}
+      </Grid>
+      <h2>
+        <br />
+        Wide charts
       </h2>
 
       <div
@@ -281,23 +340,55 @@ function Grid({
   cols,
   rows,
   children,
+  elastic,
   style,
   background = "#e9e9e9",
 }: {
   children: ReactNode;
   background?: string;
+  elastic?: boolean;
   style?: CSSProperties;
   cols: number;
   rows: number;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [w, setW] = useState(cellWidth);
+
+  useEffect(() => {
+    if (!elastic || !rootRef.current) return;
+
+    const updateWidth = () => {
+      const ww = rootRef.current!.getClientRects()[0].width;
+      console.log(ww);
+      console.log(ww / cols);
+      setW((ww - 2 * gridPadding - (cols - 1) * gap) / cols);
+    };
+
+    // Initial calculation
+    updateWidth();
+
+    // Set up ResizeObserver
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+
+    resizeObserver.observe(rootRef.current);
+
+    // Cleanup
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [elastic, cols, gridPadding, gap]); // Add dependencies that affect the calculation
+
   return (
     <div
+      ref={rootRef}
       style={{
         ...style,
         background,
         display: "grid",
         gap: gap,
-        gridTemplateColumns: `repeat(${cols}, ${cellWidth}px)`,
+        gridTemplateColumns: `repeat(${cols}, ${w}px)`,
         gridTemplateRows: `repeat(${rows}, ${cellHeight}px)`,
       }}
     >
@@ -435,7 +526,6 @@ function markLefty(
   if (context.visited.includes(current.join("|"))) return;
   let cell = grid[current[0]]?.[current[1]];
   if (!cell) return;
-  if (context.timeSeries.includes(cell)) return;
 
   context.visited.push(current.join("|"));
   context.lefty.push(cell);
