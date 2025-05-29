@@ -1,7 +1,13 @@
 import React, { CSSProperties, ReactNode, useState } from "react";
 
-const callWidth = 110;
-const callHeight = 40;
+const cellWidth = 110;
+const cellHeight = 40;
+
+const gap = 4;
+const gridPadding = 12;
+
+const borderRadius = 2;
+const cellPadding = 2;
 
 // const layoutStr = `
 // viz viz  pc  pc chart chart chart chart val
@@ -15,11 +21,41 @@ const callHeight = 40;
 // `.trim();
 
 const layoutStr = `
-a d e e k l m 1 1 1 z
-b d f g k 2 2 2 2 2 y
-c d h h 3 3 n o o p p
-0 0 0 9 9 9 8 8 8 8 7
+viz viz  pc  pc chart chart chart chart val
+viz viz  pc  pc chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
+viz viz  ch dis chart chart chart chart val
+chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5 chart5
+viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  pc1  pc1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+viz1 viz1  ch1 dis1 chart1 chart1 chart1 chart1 val1
+viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  pc2  pc2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+viz2 viz2  ch2 dis2 chart2 chart2 chart2 chart2 val2
+viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  pc3  pc3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
+viz3 viz3  ch3 dis3 chart3 chart3 chart3 chart3 val3
 `.trim();
+
+// const layoutStr = `
+// a d e e k l m 1 1 1 z
+// b d f g k 2 2 2 2 2 y
+// c d h h 3 3 n o o p p
+// 0 0 0 9 9 9 8 8 8 8 7
+// `.trim();
+
+// const layoutStr = `
+// d e k l m 1 1 1 z
+// d f k 2 2 2 2 2 y
+// d h 3 3 n o o p p
+// 0 0 9 9 8 8 8 8 7
+// `.trim();
 
 type Lay = {
   name: string;
@@ -81,7 +117,8 @@ export function Dashboards() {
 
   const context: Context = {
     visited: [] as string[],
-    timeSeries: ["1", "2", "3", "e"],
+    // timeSeries: ["1", "2", "3", "7"],
+    timeSeries: ["chart", "chart1", "chart2", "chart3", "chart5"],
     lefty: [] as string[],
     righty: [] as string[],
   };
@@ -92,21 +129,27 @@ export function Dashboards() {
       return line.trim().split(/\s+/);
     });
 
-  console.log(griddd);
-
   griddd.forEach((_, i) => {
+    // if (!context.timeSeries.includes([i, 0].join("|"))) {
     markLefty(griddd, [i, 0], context);
-    // context.visited = [];
+    // }
   });
   griddd.forEach((_, i) => {
+    // if (!context.timeSeries.includes([i, griddd[0].length - 1].join("|"))) {
     markRighty(griddd, [i, griddd[0].length - 1], context);
-    // context.visited = [];
+    // }
   });
-
-  console.log(context);
 
   return (
-    <>
+    <div
+      style={{
+        minWidth:
+          griddd[0].length * cellWidth +
+          gridPadding * 2 +
+          (griddd[0].length - 1) * gap,
+        border: "1px solid red",
+      }}
+    >
       <div>
         <pre>{layoutStr}</pre>
       </div>
@@ -115,7 +158,11 @@ export function Dashboards() {
         <pre>{gridToLayout(boxes)}</pre>
       </div>
       */}
-      <Grid style={{ padding: "12px" }} cols={15} rows={10}>
+      <Grid
+        style={{ padding: gridPadding + "px" }}
+        cols={15}
+        rows={griddd.length}
+      >
         {boxes.map((it, i) => {
           const grid = {
             gridColumn: `${it.x + 1} / span ${it.w}`,
@@ -132,8 +179,8 @@ export function Dashboards() {
                     : context.timeSeries.includes(it.name)
                       ? "#fff"
                       : "red",
-                borderRadius: "2px",
-                padding: "4px",
+                borderRadius: borderRadius + "px",
+                padding: cellPadding + "px",
                 fontVariantNumeric: "tabular-nums",
                 ...grid,
               }}
@@ -152,20 +199,88 @@ export function Dashboards() {
                   h={it.h}
                 />
               )}
-              {/*
-              <div style={{ display: "flex", gap: "4px" }}>
-                <p>x: {it.x}</p>
-                <p>y: {it.y}</p>
-                <p>w: {it.w}</p>
-                <p>h: {it.h}</p>
-              </div>
-              <p style={{ wordBreak: "break-word" }}>{JSON.stringify(grid)}</p>
-              */}
             </div>
           );
         })}
       </Grid>
-    </>
+
+      <div
+        style={{
+          padding: gridPadding + "px",
+          height: griddd.length * (cellHeight + gap) + gridPadding * 2,
+          position: "relative",
+          background: "#eed5f3",
+        }}
+      >
+        {boxes.map((it, i) => {
+          const rightI = griddd[0].length - (it.x + it.w);
+
+          return (
+            <div
+              key={i}
+              style={{
+                background: context.lefty.includes(it.name)
+                  ? "#c0cdf4"
+                  : context.righty.includes(it.name)
+                    ? "#d3f4c0"
+                    : context.timeSeries.includes(it.name)
+                      ? "#fff"
+                      : "red",
+                borderRadius: borderRadius + "px",
+                padding: gap + "px",
+                position: "absolute",
+                ...(context.lefty.includes(it.name)
+                  ? {
+                      left:
+                        gridPadding + (it.x * cellWidth + it.x * gap) + "px",
+                      top:
+                        gridPadding + (it.y * cellHeight + it.y * gap) + "px",
+                      width: it.w * cellWidth + (it.w - 1) * gap + "px",
+                      height: it.h * cellHeight + (it.h - 1) * gap + "px",
+                    }
+                  : context.righty.includes(it.name)
+                    ? {
+                        right:
+                          gridPadding +
+                          (rightI * cellWidth + rightI * gap) +
+                          "px",
+                        top:
+                          gridPadding + (it.y * cellHeight + it.y * gap) + "px",
+                        width: it.w * cellWidth + (it.w - 1) * gap + "px",
+                        height: it.h * cellHeight + (it.h - 1) * gap + "px",
+                      }
+                    : {
+                        left:
+                          gridPadding + (it.x * cellWidth + it.x * gap) + "px",
+                        right:
+                          gridPadding +
+                          (rightI * cellWidth + rightI * gap) +
+                          "px",
+                        top:
+                          gridPadding + (it.y * cellHeight + it.y * gap) + "px",
+                        height: it.h * cellHeight + (it.h - 1) * gap + "px",
+                      }),
+              }}
+            >
+              {it.name === "avg" ? (
+                <p style={{ fontSize: "11px", lineHeight: "1" }}>
+                  Some very long label without any value
+                </p>
+              ) : (
+                <Cell
+                  name={
+                    it.name +
+                    (context.timeSeries.includes(it.name) ? "<-->" : "")
+                  }
+                  w={it.w}
+                  h={it.h}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -187,11 +302,10 @@ function Grid({
       style={{
         ...style,
         background,
-        fontWeight: "10px",
         display: "grid",
-        gap: "4px",
-        gridTemplateColumns: `repeat(${cols}, ${callWidth}px)`,
-        gridTemplateRows: `repeat(${rows}, ${callHeight}px)`,
+        gap: gap,
+        gridTemplateColumns: `repeat(${cols}, ${cellWidth}px)`,
+        gridTemplateRows: `repeat(${rows}, ${cellHeight}px)`,
       }}
     >
       {children}
@@ -233,7 +347,6 @@ function gridToGroups(grid: Lay[], dir: ">" | "v"): Array<string[]> {
 
     for (let i = 1; i <= layout[0].length; i++) {
       if (layout.every((it) => it[i] !== it[i - 1])) {
-        // console.log("GROUP!", prevL, i, [...new Set(names)]);
         groups.push([...new Set(names)]);
         names = [];
         prevL = i;
@@ -252,7 +365,6 @@ function gridToGroups(grid: Lay[], dir: ">" | "v"): Array<string[]> {
             return layout[i]?.[j] !== layout[i - 1][j];
           })
       ) {
-        // console.log("GROUP!", prevT, i, [...new Set(names)]);
         groups.push([...new Set(names)]);
         names = [];
         prevT = i;
@@ -264,9 +376,6 @@ function gridToGroups(grid: Lay[], dir: ">" | "v"): Array<string[]> {
       );
     }
   }
-
-  // console.log({ dir });
-  // console.log(groups.map((g) => g.join(" ")).join("\n"));
 
   return groups;
 }
@@ -304,6 +413,7 @@ function markLefty(
   if (context.visited.includes(current.join("|"))) return;
   let cell = grid[current[0]]?.[current[1]];
   if (!cell) return;
+  if (context.timeSeries.includes(cell)) return;
 
   context.visited.push(current.join("|"));
   context.lefty.push(cell);
@@ -334,8 +444,11 @@ function markRighty(
 ) {
   if (context.visited.includes(current.join("|"))) return;
   if (context.lefty.includes(current.join("|"))) return;
+  if (context.righty.includes(current.join("|"))) return;
+
   let cell = grid[current[0]]?.[current[1]];
   if (!cell) return;
+  if (context.timeSeries.includes(cell)) return;
 
   context.visited.push(current.join("|"));
   context.righty.push(cell);
