@@ -18,6 +18,7 @@ const layoutStr = `
 a d e e k l m 1 1 1 z
 b d f g k 2 2 2 2 2 y
 c d h h 3 3 n o o p p
+0 0 0 9 9 9 8 8 8 8 7
 `.trim();
 
 type Lay = {
@@ -80,7 +81,7 @@ export function Dashboards() {
 
   const context: Context = {
     visited: [] as string[],
-    timeSeries: ["1", "2", "3"],
+    timeSeries: ["1", "2", "3", "e"],
     lefty: [] as string[],
     righty: [] as string[],
   };
@@ -91,8 +92,17 @@ export function Dashboards() {
       return line.trim().split(/\s+/);
     });
 
-  // console.log(griddd);
-  markLefty(griddd, [0, 0], context);
+  console.log(griddd);
+
+  griddd.forEach((_, i) => {
+    markLefty(griddd, [i, 0], context);
+    // context.visited = [];
+  });
+  griddd.forEach((_, i) => {
+    markRighty(griddd, [i, griddd[0].length - 1], context);
+    // context.visited = [];
+  });
+
   console.log(context);
 
   return (
@@ -117,9 +127,11 @@ export function Dashboards() {
               style={{
                 background: context.lefty.includes(it.name)
                   ? "#c0cdf4"
-                  : context.timeSeries.includes(it.name)
-                    ? "#fff"
-                    : "#d3f4c0",
+                  : context.righty.includes(it.name)
+                    ? "#d3f4c0"
+                    : context.timeSeries.includes(it.name)
+                      ? "#fff"
+                      : "red",
                 borderRadius: "2px",
                 padding: "4px",
                 fontVariantNumeric: "tabular-nums",
@@ -131,7 +143,14 @@ export function Dashboards() {
                   Some very long label without any value
                 </p>
               ) : (
-                <Cell name={it.name} w={it.w} h={it.h} />
+                <Cell
+                  name={
+                    it.name +
+                    (context.timeSeries.includes(it.name) ? "<-->" : "")
+                  }
+                  w={it.w}
+                  h={it.h}
+                />
               )}
               {/*
               <div style={{ display: "flex", gap: "4px" }}>
@@ -292,6 +311,7 @@ function markLefty(
   let rightCell = grid[current[0]][current[1] + 1];
   let leftCell = grid[current[0]][current[1] - 1];
   let downCell = grid[current[0] + 1]?.[current[1]];
+  let upCell = grid[current[0] - 1]?.[current[1]];
 
   if (!context.timeSeries.includes(rightCell)) {
     markLefty(grid, [current[0], current[1] + 1], context);
@@ -300,6 +320,41 @@ function markLefty(
   markLefty(grid, [current[0], current[1] - 1], context);
 
   if (cell === downCell) {
-    markLefty(grid, [current[0] + 1, current[0]], context);
+    markLefty(grid, [current[0] + 1, current[1]], context);
+  }
+  if (cell === upCell) {
+    markLefty(grid, [current[0] - 1, current[1]], context);
+  }
+}
+
+function markRighty(
+  grid: Array<string[]>,
+  current: [number, number],
+  context: Context,
+) {
+  if (context.visited.includes(current.join("|"))) return;
+  if (context.lefty.includes(current.join("|"))) return;
+  let cell = grid[current[0]]?.[current[1]];
+  if (!cell) return;
+
+  context.visited.push(current.join("|"));
+  context.righty.push(cell);
+
+  let rightCell = grid[current[0]][current[1] + 1];
+  let leftCell = grid[current[0]][current[1] - 1];
+  let downCell = grid[current[0] + 1]?.[current[1]];
+  let upCell = grid[current[0] - 1]?.[current[1]];
+
+  if (!context.timeSeries.includes(leftCell)) {
+    markRighty(grid, [current[0], current[1] - 1], context);
+  }
+
+  markRighty(grid, [current[0], current[1] + 1], context);
+
+  if (cell === downCell) {
+    markRighty(grid, [current[0] + 1, current[1]], context);
+  }
+  if (cell === upCell) {
+    markRighty(grid, [current[0] - 1, current[1]], context);
   }
 }
