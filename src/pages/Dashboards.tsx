@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { CSSProperties, ReactNode, useState } from "react";
+
+const callWidth = 110;
+const callHeight = 40;
 
 const layoutStr = `
 viz viz  pc  pc chart chart chart chart val current
@@ -63,25 +66,12 @@ function layoutToGrid(layout: string): Lay[] {
 export function Dashboards() {
   const boxes: Lay[] = layoutToGrid(layoutStr);
 
-  const callWidth = 110;
-  const callHeight = 40;
-
   return (
     <>
       <div>
         <pre>{layoutStr}</pre>
       </div>
-      <div
-        style={{
-          fontWeight: "10px",
-          display: "grid",
-          background: "#e9e9e9",
-          gap: "4px",
-          padding: "12px",
-          gridTemplateColumns: `repeat(10, ${callWidth}px)`,
-          gridTemplateRows: `repeat(10, ${callHeight}px)`,
-        }}
-      >
+      <Grid style={{ padding: "12px" }} cols={10} rows={10}>
         {boxes.map((it, i) => {
           const grid = {
             gridColumn: `${it.x + 1} / span ${it.w}`,
@@ -100,19 +90,10 @@ export function Dashboards() {
             >
               {it.name === "avg" ? (
                 <p style={{ fontSize: "11px", lineHeight: "1" }}>
-                  some very long label without any value
+                  Some very long label without any value
                 </p>
               ) : (
-                <>
-                  <p style={{ fontSize: "11px", lineHeight: "1" }}>{it.name}</p>
-                  <p style={{ fontSize: "22px", lineHeight: "1" }}>
-                    {(Math.floor(Math.random() * 9999) - 5000) / 10}
-                    {<>&thinsp;</>}
-                    <span style={{ fontSize: "11px", lineHeight: "1" }}>
-                      kWh
-                    </span>
-                  </p>
-                </>
+                <Cell name={it.name} w={it.w} h={it.h} />
               )}
               {/*
               <div style={{ display: "flex", gap: "4px" }}>
@@ -126,7 +107,58 @@ export function Dashboards() {
             </div>
           );
         })}
-      </div>
+      </Grid>
     </>
+  );
+}
+
+function Grid({
+  cols,
+  rows,
+  children,
+  style,
+  background = "#e9e9e9",
+}: {
+  children: ReactNode;
+  background?: string;
+  style?: CSSProperties;
+  cols: number;
+  rows: number;
+}) {
+  return (
+    <div
+      style={{
+        ...style,
+        background,
+        fontWeight: "10px",
+        display: "grid",
+        gap: "4px",
+        gridTemplateColumns: `repeat(${cols}, ${callWidth}px)`,
+        gridTemplateRows: `repeat(${rows}, ${callHeight}px)`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Cell({ name, w, h }: { name: string; w: number; h: number }) {
+  return (
+    <Grid cols={w} rows={h} background="transparent">
+      {Array(w * h)
+        .fill(0)
+        .map(() => {
+          return (
+            <div>
+              <p style={{ fontSize: "11px", lineHeight: "1" }}>{name}</p>
+              <p style={{ fontSize: "22px", lineHeight: "1" }}>
+                {(Math.floor(Math.random() * 4999) - 2500) / 10}
+                {<>&thinsp;</>}
+                <span style={{ fontSize: "11px", lineHeight: "1" }}>kWh</span>
+              </p>
+            </div>
+          );
+        })}
+    </Grid>
   );
 }
